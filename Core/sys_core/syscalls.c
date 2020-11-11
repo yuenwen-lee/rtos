@@ -31,12 +31,12 @@
 #include <sys/time.h>
 #include <sys/times.h>
 
+#include "sys_device/dev_uart.h"
+
 
 /* Variables */
 //#undef errno
 extern int errno;
-extern int __io_putchar(int ch) __attribute__((weak));
-extern int __io_getchar(void) __attribute__((weak));
 
 register char * stack_ptr asm("sp");
 

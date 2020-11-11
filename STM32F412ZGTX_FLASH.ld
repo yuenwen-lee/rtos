@@ -135,7 +135,7 @@ SECTIONS
     *(.data*)          /* .data* sections */
 
     . = ALIGN(4);
-    _edata = .;        /* define a global symbol at data end */    
+    _edata = .;        /* define a global symbol at data end */
   } >RAM AT> FLASH
 
   /* Uninitialized data section into "RAM" Ram type memory */

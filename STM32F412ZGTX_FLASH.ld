@@ -55,6 +55,7 @@ SECTIONS
   .text :
   {
     . = ALIGN(4);
+    _stext = .;        /* define a global symbols at start of code */
     *(.text)           /* .text sections (code) */
     *(.text*)          /* .text* sections (code) */
     *(.glue_7)         /* glue arm to thumb code */
@@ -72,9 +73,11 @@ SECTIONS
   .rodata :
   {
     . = ALIGN(4);
+    _srodata = .;      /* define a global symbols at start of constant */
     *(.rodata)         /* .rodata sections (constants, strings, etc.) */
     *(.rodata*)        /* .rodata* sections (constants, strings, etc.) */
     . = ALIGN(4);
+    _erodata = .;      /* define a global symbols at end of constant */
   } >FLASH
 
   .ARM.extab   : { 
@@ -132,8 +135,7 @@ SECTIONS
     *(.data*)          /* .data* sections */
 
     . = ALIGN(4);
-    _edata = .;        /* define a global symbol at data end */
-    
+    _edata = .;        /* define a global symbol at data end */    
   } >RAM AT> FLASH
 
   /* Uninitialized data section into "RAM" Ram type memory */

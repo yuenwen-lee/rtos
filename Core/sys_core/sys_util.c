@@ -13,6 +13,8 @@
 #include "sys_util.h"
 
 
+int32_t sys_disable_irq_req;
+
 extern uint8_t _end;
 extern uint8_t *__sbrk_heap_end;
 
@@ -50,6 +52,7 @@ extern uint32_t _sdata;    // start address for the .data section. defined in li
 extern uint32_t _edata;    // end__ address for the .data section. defined in linker script
 extern uint32_t _sbss;     // start address for the .bss section. defined in linker script
 extern uint32_t _ebss;     // end__ address for the .bss section. defined in linker script
+extern uint32_t _estack;   // end of the RAM, 
 
 void system_info_linker(void)
 {
@@ -82,6 +85,8 @@ void system_info_linker(void)
     end = (void *) &_ebss;
     size = ((uint32_t) end - (uint32_t) beg);
     printf("  bss   : 0x%08lx, 0x%08lx (%lu)\r\n", (uint32_t) beg, (uint32_t) end, size);
+
+    printf("  estack: 0x%08lx\r\n", (uint32_t) &_estack);
 }
 
 

@@ -1,0 +1,785 @@
+/*
+ * cli_util.c
+ *
+ * Created on: Dec 11, 2018
+ *     Author: ywlee
+ */ 
+
+#include <application/cli_util.h>
+#include <application/cmd_util.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "kernel/task.h"
+#include "kernel/sem.h"
+#include "kernel/ring_buf_event.h"
+#include "sys_device/dev_uart.h"
+
+
+// ############################################################################
+// ##
+// ############################################################################
+
+static cli_info_t cli_info_root = {
+    .cmnd = "CLI_Head",
+    .help = "head of CLI",
+    .cli_cb = NULL,
+    .node_head = NULL,
+    .next = NULL,
+    .prev = NULL,
+    .chain = NULL,
+    .type = CLI_INFO_TYPE_NODE,
+    .level = 0};
+static cli_info_t *cli_chain_last = &cli_info_root;
+static const char *cli_cmd_stack[CLI_CMD_STACK_MAX];
+static uint8_t cli_cnfg_dbg_trace = 0;
+static uint8_t cli_cnfg_dbg_cmd_path = 0;
+
+
+static void cli_info_chain_walk_reset(void);
+static char *indentation_create (int num);
+static void indentation_free(char *ind);
+static void cli_info_dump(cli_info_t *cli, const char *idnt);
+static void cli_info_dump_sub_tree(cli_info_t *cli);
+static int cli_info_cmd_path_dump(cli_info_t *cli, const char *pad);
+static void cli_info_help(cli_info_t *cli_node);
+static void cli_info_help_trace(cli_info_t *cli_node);
+static void cli_info_tree_scan(void);
+
+
+
+// ############################################################################
+// ##
+// ############################################################################
+
+static void cli_info_init(cli_info_t *cli_info,
+                          int type, const char *command, const char *help, cli_func_t cb)
+{
+    cli_info->cmnd = command;
+    cli_info->help = help;
+    cli_info->type = type;
+    cli_info->cnfg_err = 0;
+    cli_info->cli_cb = cb;
+    cli_info->node_head = NULL;
+    cli_info->next = NULL;
+    cli_info->prev = NULL;
+    cli_info->chain = NULL;
+}
+
+
+void cli_info_init_node(cli_info_t *cli_info, const char *command, const char *help)
+{
+    cli_info_init(cli_info, CLI_INFO_TYPE_NODE, command, help, NULL);
+}
+
+
+void cli_info_init_leaf(cli_info_t *cli_info, const char *command, const char *help, cli_func_t cb)
+{
+    cli_info_init(cli_info, CLI_INFO_TYPE_LEAF, command, help, cb);
+}
+
+
+void cli_info_attach_node(cli_info_t *cli_node, cli_info_t *my_cli)
+{
+    cli_info_t *link, *prev;
+
+    if (my_cli->cmnd == NULL) {
+        my_cli->cnfg_err |= CLI_INFO_CNFG_ERR_CMND_NULL;
+    }
+
+    if (cli_node->node_head == NULL) {
+        cli_node->node_head = my_cli;
+        my_cli->prev = cli_node;
+        goto EXIT;   // init condition ...
+    }
+
+    link = cli_node->node_head;
+    prev = cli_node;
+
+    while (link) {
+
+        if (strcmp(my_cli->cmnd, link->cmnd) == 0) {
+            my_cli->cnfg_err |= CLI_INFO_CNFG_ERR_CMND_DUP;
+        }
+
+        if (strcmp(my_cli->cmnd, link->cmnd) < 0) {
+            break;
+        } else {
+            prev = link;
+            link = link->next;
+        }
+    }
+
+    if (prev == cli_node) {
+        prev->node_head = my_cli;
+    } else {
+        prev->next = my_cli;
+    }
+    my_cli->prev = prev;
+    my_cli->next = link;
+    if (link) {
+        link->prev = my_cli;
+    }
+
+ EXIT:
+    my_cli->level = cli_node->level + 1;
+    cli_chain_last->chain = my_cli;
+    cli_chain_last = my_cli;
+}
+
+
+void cli_info_attach_root(cli_info_t *my_cli)
+{
+    cli_info_attach_node(&cli_info_root, my_cli);
+}
+
+
+// ############################################################################
+// ############################################################################
+
+void cli_info_parser(cmd_info_t *cmd_info)
+{
+    cli_info_t *cli = cli_info_root.node_head;
+    arg_info_t *arg = cmd_info->arg_list;
+    uint32_t arg_num = cmd_info->arg_num;
+    int rtn, found;
+
+    if (cli_cnfg_dbg_trace) {
+        printf("cli_info_parser:\r\n");          // DBG ............
+    }
+
+    for (uint32_t n = 0; n < arg_num; ++n) {
+
+        char *cmd = arg[n].beg;
+        int   cmd_len = arg[n].len;
+
+        if (cli_cnfg_dbg_trace)
+            printf("  %lu: %s\r\n", n, cmd);      // DBG ............
+
+        if (strncmp("help", cmd, cmd_len) == 0 || strncmp("?", cmd, cmd_len) == 0) {
+            if (cli_cnfg_dbg_trace)
+                printf("  ->> help cmd\r\n");    // DBG ............
+            cli_info_help_trace(cli);
+            goto EXIT;
+        }
+
+        if (cli_cnfg_dbg_trace)
+            printf("search: ");                // DBG ............
+
+        found = 0;
+        while (cli) {
+            // searche the command pattern
+            if (cli_cnfg_dbg_trace)
+                printf("%s ", cli->cmnd);      // DBG ............
+            if (strncmp(cli->cmnd, cmd, cmd_len) == 0) {
+                found = 1;
+                break;  // match !!!
+            }
+            cli = cli->next;
+        }
+
+        if (!found) {
+            printf("invalid command ...\r\n");
+            goto EXIT;
+        }
+        if (cli_cnfg_dbg_trace)
+            printf("-> ");                     // DBG ............
+
+        if (cli->cli_cb) {
+            // execute the call-back
+            if (cli_cnfg_dbg_trace)
+                printf("call-back\n ");        // DBG ............
+            cmd_info->arg_rd_indx = n + 1;
+            rtn = cli->cli_cb(cmd_info);
+            if (rtn < 0) {
+                // what should we do if ...
+            }
+            goto EXIT;
+
+        } else if (cli->node_head) {
+            if (cli_cnfg_dbg_trace)
+                printf("goto node\r\n");         // DBG ............
+            cli = cli->node_head;
+
+        } else {
+            // call-back and node_start are both NULL ....???
+            printf("dummy command\r\n");
+            goto EXIT;
+        }
+    }
+    cli_info_help(cli);
+
+ EXIT:
+    printf("\r\n");
+}
+
+
+// ############################################################################
+// ############################################################################
+
+static void cli_info_tree_scan(void)
+{
+    cli_info_t *cli;
+    int count, count_err;
+
+    printf("Scan CLI tree ...\r\n");
+
+    count = count_err = 0;
+    cli = &cli_info_root;
+
+    do {
+
+        if (cli->cnfg_err & CLI_INFO_CNFG_ERR_CMND_DUP) {
+            count_err++;
+        }
+        if (cli->cnfg_err & CLI_INFO_CNFG_ERR_CMND_NULL) {
+            count_err++;
+        }
+
+        if (cli->type == CLI_INFO_TYPE_LEAF) {
+            if (cli->node_head) {
+                // cli is a leaf, node_head is not NULL
+                cli->cnfg_err |= CLI_INFO_CNFG_ERR_LEAF_NODE;
+                count_err++;
+            }
+
+        } else if (cli->type == CLI_INFO_TYPE_NODE) {
+            if (cli->cli_cb) {
+                // cli is a node, but the call-back is not NULL
+                cli->cnfg_err |= CLI_INFO_CNFG_ERR_NODE_CB;
+                count_err++;
+            }
+
+            if (cli->node_head == NULL) {
+                // cli is a EMPTY node ...
+                cli->cnfg_err |= CLI_INFO_CNFG_ERR_NODE_EMPTY;
+                count_err++;
+            }
+
+        } else {
+            cli->cnfg_err |= CLI_INFO_CNFG_ERR_TYPE_UNKWN;
+            count_err++;
+        }
+
+        if (cli->cnfg_err) {
+            cli_info_cmd_path_dump(cli, "  ");
+            printf("- %s\r\n", cli->help);
+            if (cli->cnfg_err & CLI_INFO_CNFG_ERR_TYPE_UNKWN)
+                printf("    cli type is unknown\r\n");
+            if (cli->cnfg_err & CLI_INFO_CNFG_ERR_CMND_DUP)
+                printf("    cli command is duplictaed\r\n");
+            if (cli->cnfg_err & CLI_INFO_CNFG_ERR_CMND_NULL)
+                printf("    cli command is NULL\r\n");
+            if (cli->cnfg_err & CLI_INFO_CNFG_ERR_NODE_CB)
+                printf("    cli is a node with call-back function\r\n");
+            if (cli->cnfg_err & CLI_INFO_CNFG_ERR_NODE_EMPTY)
+                printf("    cli is a node, but node_head is EMPTY\r\n");
+            if (cli->cnfg_err & CLI_INFO_CNFG_ERR_LEAF_NODE)
+                printf("    cli is a leaf, but node_head is not EMPTY\r\n");
+        }
+
+        count++;
+        cli = cli->chain;
+    } while (cli);
+
+    printf("total cli: %d\r\n", count);
+    printf("      err: %d\r\n", count_err);
+}
+
+
+// ############################################################################
+// ############################################################################
+
+static void cli_info_help(cli_info_t *cli_node)
+{
+    cli_info_t *cli = cli_node;
+
+    printf("help :\r\n");
+    while (cli) {
+
+        cli_info_cmd_path_dump(cli, "  ");
+        switch (cli->type) {
+        case CLI_INFO_TYPE_NODE:
+            printf("- <N> ");
+            break;
+        case CLI_INFO_TYPE_LEAF:
+            printf("- <L> ");
+            break;
+        default:
+            printf("- <?> ");
+        }
+        printf("%s\r\n", (cli->help) ? cli->help : "(null)");
+
+        cli = cli->next;
+    }
+}
+
+static void cli_info_help_trace(cli_info_t *cli_node)
+{
+    cli_info_t *cli_stop;
+    cli_info_t *cli;
+    int flag;
+
+    cli_info_chain_walk_reset();
+    cli_stop = cli_node->prev;
+    cli = cli_node;
+
+    do {
+
+        if (!(cli->state & CLI_INFO_STATE_ACT)) {
+            cli->state |= CLI_INFO_STATE_ACT;
+
+            if (cli_cnfg_dbg_cmd_path) {
+                flag = 1;
+            } else if (cli->cli_cb) {
+                flag = 1;
+            } else {
+                flag = 0;
+            }
+
+            if (flag) {
+                cli_info_cmd_path_dump(cli, "  ");
+                switch (cli->type) {
+                case CLI_INFO_TYPE_NODE:
+                    printf("- <N> ");
+                    break;
+                case CLI_INFO_TYPE_LEAF:
+                    printf("- <L> ");
+                    break;
+                default:
+                    printf("- <?> ");
+                }
+                printf("%s\r\n", (cli->help) ? cli->help : "(null)");
+            }
+
+
+        } else if (!(cli->state & CLI_INFO_STATE_NODE)) {
+            cli->state |= CLI_INFO_STATE_NODE;
+            if (cli->node_head) {
+                cli = cli->node_head;
+            }
+
+        } else if (!(cli->state & CLI_INFO_STATE_NEXT)) {
+            cli->state |= CLI_INFO_STATE_NEXT;
+            if (cli->next) {
+                cli = cli->next;
+            }
+
+        } else {
+            cli = cli->prev;
+        }
+
+    } while (cli != cli_stop);
+}
+
+
+void cli_info_help_trace_root(void)
+{
+    cli_info_help_trace(&cli_info_root);
+}
+
+
+// ############################################################################
+// ############################################################################
+
+static void cli_info_dump_recusive_core(cli_info_t *cli, int levl)
+{
+    char *ind = indentation_create (2*levl);
+
+    cli_info_cmd_path_dump(cli, ind);
+    printf("\r\n");
+    cli_info_dump(cli, ind);
+    printf("\r\n");
+
+    cli_info_t *leaf = cli->node_head;
+    if (leaf != NULL) {
+        cli_info_dump_recusive_core(leaf, levl+1);
+    }
+
+    if (cli->next) {
+        cli_info_dump_recusive_core(cli->next, levl);
+    }
+
+    indentation_free(ind);
+}
+
+void cli_info_dump_recursive(void)
+{
+    cli_info_dump_recusive_core(&cli_info_root, 0);
+}
+
+
+// ############################################################################
+// ############################################################################
+
+static void cli_info_chain_walk_reset(void)
+{
+    cli_info_t *cli;
+
+    cli = &cli_info_root;
+    do {
+        cli->state = 0;
+        cli = cli->chain;
+    } while (cli);
+}
+
+
+void cli_info_dump_chain_walk(void)
+{
+    cli_info_t *cli;
+
+    cli = &cli_info_root;
+    do {
+        cli_info_dump(cli, " ");
+        printf("\r\n");
+        cli = cli->chain;
+    } while (cli != cli_chain_last);
+}
+
+
+// ############################################################################
+// ############################################################################
+
+static void cli_info_dump_sub_tree(cli_info_t *cli)
+{
+    cli_info_t *cli_node;
+    uint32_t level_offset;
+
+    cli_info_chain_walk_reset();
+
+    cli_node = cli->prev;
+    level_offset = cli->level;
+    while (cli != cli_node) {
+
+        if (!(cli->state & CLI_INFO_STATE_ACT)) {
+            cli->state |= CLI_INFO_STATE_ACT;
+
+            char *ind = indentation_create (2 * (cli->level - level_offset));
+
+            cli_info_cmd_path_dump(cli, ind);
+            printf("\r\n");
+            cli_info_dump(cli, ind);
+            printf("\r\n");
+
+            indentation_free(ind);
+
+        } else if (!(cli->state & CLI_INFO_STATE_NODE)) {
+            cli->state |= CLI_INFO_STATE_NODE;
+            if (cli->node_head) {
+                cli = cli->node_head;
+            }
+
+        } else if (!(cli->state & CLI_INFO_STATE_NEXT)) {
+            cli->state |= CLI_INFO_STATE_NEXT;
+            if (cli->next) {
+                cli = cli->next;
+            }
+
+        } else {
+            cli = cli->prev;
+        }
+    }
+}
+
+void cli_info_dump_full_tree(void)
+{
+    cli_info_dump_sub_tree(&cli_info_root);
+}
+
+
+// ############################################################################
+// ##
+// ############################################################################
+
+static char *indentation_create(int num)
+{
+    char *ind = (char *) malloc((num + 1) * sizeof(char));
+
+    for (int n = 0; n < num; ++n) {
+        ind[n] = ' ';
+    }
+    ind[num] = 0;
+
+    return ind;
+}
+
+
+static void indentation_free(char *ind)
+{
+    free(ind);
+}
+
+
+static void cli_info_dump_type(cli_info_t *cli)
+{
+    switch (cli->type) {
+    case CLI_INFO_TYPE_NODE:
+        printf(" - NODE %s\r\n", cli->cmnd);
+        break;
+    case CLI_INFO_TYPE_LEAF:
+        printf(" - LEAF %s\r\n", cli->cmnd);
+        break;
+    default:
+        printf(" - ???? %s\r\n", cli->cmnd);
+    }
+}
+
+
+static void cli_info_dump(cli_info_t *cli, const char *idnt)
+{
+    printf("%sCLI Info (%p):\r\n", idnt, cli);
+    printf("%s  level: %d\r\n", idnt, cli->level);
+    if (cli->type == CLI_INFO_TYPE_NODE) {
+        printf("%s  type:  NODE ...\r\n", idnt);
+    } else if (cli->type == CLI_INFO_TYPE_LEAF) {
+        printf("%s  type:  LEAF\r\n", idnt);
+    } else {
+        printf("%s  type:  UNKNOW !!!!!!\r\n", idnt);
+    }
+    printf("%s  cnfg:  0x%x\r\n", idnt, cli->cnfg_err);
+    printf("%s  cmnd:  %s\r\n", idnt, cli->cmnd);
+    printf("%s  help:  %s\r\n", idnt, cli->help);
+    printf("%s  cb:    %p\r\n", idnt, cli->cli_cb);
+    printf("%s  node:  %p", idnt, cli->node_head);
+    if (cli->node_head) {
+        cli_info_dump_type(cli->node_head);
+    } else {
+        printf("\r\n");
+    }
+    printf("%s  prev:  %p", idnt, cli->prev);
+    if (cli->prev) {
+        cli_info_dump_type(cli->prev);
+    } else {
+        printf("\r\n");
+    }
+    printf("%s  next:  %p", idnt, cli->next);
+    if (cli->next) {
+        cli_info_dump_type(cli->next);
+    } else {
+        printf("\r\n");
+    }
+    printf("%s  chain: %p\r\n", idnt, cli->chain);
+}
+
+
+static int cli_info_cmd_path_dump(cli_info_t *cli, const char *ind)
+{
+    uint32_t level;
+    int m, n;
+
+    n = 0;
+    level = (uint32_t) -1;
+
+    while  (cli) {
+        if (level > cli->level) {
+            level = cli->level;
+            if (n < CLI_CMD_STACK_MAX) {
+                cli_cmd_stack[n] = cli->cmnd;
+            }
+            n++;
+        }
+        cli = cli->prev;
+    }
+
+    printf("%s", ind);
+    for (m = (n - 2); m >= 0; --m) {
+        if (m < CLI_CMD_STACK_MAX) {
+            printf("%s ", cli_cmd_stack[m]);
+        }
+    }
+
+    return n;
+}
+
+
+// ############################################################################
+// ##
+// ############################################################################
+
+extern ring_buf_event_t uart_buf_event;
+static cmd_info_t cli_cmd_info;
+
+
+uint32_t cli_task(void *arg)
+{
+	char     *buf_p;
+	uint32_t  buf_len;
+	int rt;
+
+	uart_handler_init();  // Setup the UART_Handler() ISR for UART
+
+	cli_mng_init();
+	cli_cmd_info.arg_list_size = ARG_LEN;
+
+	while (1) {
+
+		ring_buf_event_wait(&uart_buf_event, &buf_p, &buf_len);
+		if (buf_len == 0) {
+			continue;
+		}
+
+		cli_cmd_info.cmd_buf = buf_p;
+		cli_cmd_info.cmd_len = buf_len;
+
+		rt = cmd_segment(&cli_cmd_info);
+		if (rt < 0) {
+			printf("Error, too many arguments ...\r\n");
+			continue;
+		}
+		cli_info_parser(&cli_cmd_info);
+
+		ring_buf_event_seg_free(&uart_buf_event);
+	}
+
+	return 0;
+}
+
+
+// ############################################################################
+// ##
+// ############################################################################
+
+static int cli_cb_cnfg(cmd_info_t *cmd_info)
+{
+    const char *help = "usuage: [debug on|off] [cmd_path on|off]";
+    arg_info_t *arg;
+
+    if (!cmd_arg_avail(cmd_info) || cmd_arg_1st_is_help(cmd_info)) {
+        printf("%s\r\n", help);
+        goto EXIT;
+    }
+
+    while (cmd_arg_avail(cmd_info)) {
+
+        macro_cmd_arg_pop(cmd_info, arg);
+
+        if (!strcmp(arg->beg, "debug")) {
+            macro_cmd_arg_pop(cmd_info, arg);
+            if (!strcmp(arg->beg, "on")) {
+                cli_cnfg_dbg_trace = 1;
+            } else {
+                cli_cnfg_dbg_trace = 0;
+            }
+
+        } else if (!strcmp(arg->beg, "cmd_path")) {
+            macro_cmd_arg_pop(cmd_info, arg);
+            if (!strcmp(arg->beg, "on")) {
+                cli_cnfg_dbg_cmd_path = 1;
+            } else {
+                cli_cnfg_dbg_cmd_path = 0;
+            }
+
+        } else {
+            printf("invalid commmand, %s\r\n", arg->beg);
+        }
+    }
+
+ EXIT:
+    printf("debug: %s\r\n", (cli_cnfg_dbg_trace == 1) ? "on" : "off");
+    printf("cmd_path %s\r\n", (cli_cnfg_dbg_cmd_path == 1) ? "on" :" off");
+    return 0;
+}
+
+
+static int cli_cb_scan(cmd_info_t *cmd_info)
+{
+    const char *help = "usuage:";
+
+    if (cmd_arg_1st_is_help(cmd_info)) {
+        printf("%s\r\n", help);
+        return 0;
+    }
+
+    cli_info_tree_scan();
+    return 0;
+}
+
+
+static int cli_cb_dump(cmd_info_t *cmd_info)
+{
+    const char *help = "usuage: tree|single cmd_path ...";
+    arg_info_t *arg;
+    int mode, found, stop_at_leaf;
+
+    if (!cmd_arg_avail(cmd_info) || cmd_arg_1st_is_help(cmd_info)) {
+        printf("%s\r\n", help);
+        return 0;
+    }
+
+    arg = cmd_arg_pop(cmd_info);
+    if (!strcmp("tree", arg->beg)) {
+        mode = 0;
+    } else if (!strcmp("single", arg->beg)) {
+        mode = 1;
+    } else {
+        printf("invalid command %s\r\n", arg->beg);
+        return -1;
+    }
+
+    stop_at_leaf = 0;
+    cli_info_t *cli = cli_info_root.node_head;
+    while (cmd_arg_avail(cmd_info)) {
+
+        arg = cmd_arg_pop(cmd_info);
+        printf("%s ", arg->beg);
+
+        found = 0;
+        while (cli) {
+            if (!strcmp(cli->cmnd, arg->beg)) {
+                found = 1;
+                break;  // match !!!
+            }
+            cli = cli->next;
+        }
+
+        if (!found) {
+            printf("-> invalid cli path\r\n");
+            return -1;
+        }
+
+        if (cli->node_head) {
+            cli = cli->node_head;
+        } else {
+        	stop_at_leaf = 1;
+            break;
+        }
+    }
+    printf("\n\r\n");
+
+    if (mode == 0) {
+        cli_info_dump_sub_tree(cli);
+    } else {
+    	if (stop_at_leaf == 0) {
+    		cli = cli->prev;
+    	}
+        cli_info_cmd_path_dump(cli, "");
+        printf("\r\n");
+        cli_info_dump(cli, "");
+    }
+
+    return 0;
+}
+
+
+// ############################################################################
+// ############################################################################
+
+static cli_info_t cli_mng_root;
+static cli_info_t cli_mng_root_cnfg;
+static cli_info_t cli_mng_root_scan;
+static cli_info_t cli_mng_root_dump;
+
+void cli_mng_init(void)
+{
+    cli_info_init_node(&cli_mng_root, "cli", "cli control and dump");
+    cli_info_attach_root(&cli_mng_root);
+
+    cli_info_init_leaf(&cli_mng_root_cnfg, "cnfg", "control cli operation", cli_cb_cnfg);
+    cli_info_init_leaf(&cli_mng_root_scan, "scan", "scan and check the cli tree", cli_cb_scan);
+    cli_info_init_leaf(&cli_mng_root_dump, "dump", "dump cli_info (single or sub-tree)", cli_cb_dump);
+
+    cli_info_attach_node(&cli_mng_root, &cli_mng_root_cnfg);
+    cli_info_attach_node(&cli_mng_root, &cli_mng_root_scan);
+    cli_info_attach_node(&cli_mng_root, &cli_mng_root_dump);
+}

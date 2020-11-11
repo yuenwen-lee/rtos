@@ -1,0 +1,43 @@
+/*
+ * task_examples.h
+ *
+ * Created: 10/22/2020 5:27:58 PM
+ *  Author: yuenw
+ */ 
+
+#ifndef _TASK_EXAMPLES_H_
+#define _TASK_EXAMPLES_H_
+
+
+//
+// task_example_dummy.c  .........................................
+//
+uint32_t task_dummy_AA(void *argv);
+void task_dummy_AA_dump(void);
+
+
+//
+// task_example_timer.c  .........................................
+//
+#define TASK_TIMER_NUM    20
+
+typedef struct task_timer_stat_ {
+	uint32_t used;
+	uint32_t wake_count;
+	uint32_t wake_count_prev;
+	uint32_t wake_count_dlt;
+	uint32_t wake_num;
+} task_timer_stat_t;
+
+typedef struct task_timer_cnfg_ {
+	uint32_t id;       // id
+	uint32_t period;   // in msec
+} task_timer_cnfg_t;
+
+
+uint32_t task_timer(void *arg);
+void task_timer_stat_update(void);
+void task_timer_stat_display(void);
+
+
+#endif /* _TASK_EXAMPLES_H_ */

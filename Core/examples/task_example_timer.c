@@ -1,0 +1,84 @@
+/*
+ * task_example_timer.c
+ *
+ *  Created on: Sep 15, 2018
+ *      Author: ywlee
+ */ 
+
+#include <stdint.h>
+#include <stddef.h>
+#include <stdio.h>
+
+#include "kernel/task.h"
+#include "kernel/task_util.h"
+#include "kernel/timer.h"
+#include "kernel/sem.h"
+#include "examples/func_example.h"
+#include "examples/task_example.h"
+
+
+static task_timer_stat_t timer_stat[TASK_TIMER_NUM];
+
+
+uint32_t task_timer (void *arg)
+{
+	task_timer_cnfg_t *cnfg;
+	task_timer_stat_t *stat = NULL;
+	timer_obj_t  task_A_timer;
+	uint32_t  id;
+	uint32_t  a1, m;
+
+	cnfg = (task_timer_cnfg_t *) arg;
+	id = cnfg->id;
+	if (id < TASK_TIMER_NUM) {
+		stat = &timer_stat[id];
+		stat->used = 1;
+		stat->wake_num = 1000 / cnfg->period;
+	}
+	timer_init(&task_A_timer, cnfg->period);
+
+	a1 = 0;
+	while (1) {
+		timer_wait_fixed(&task_A_timer);
+		if (stat)
+			stat->wake_count++;
+
+		for (m = 0; m < 2000; ++m) {
+			// for some CPU, the wait state of program flash will cause CPU
+			// adds huge wait cycles because of the API call (the branch)
+//			a1 += api_A(1, a1);
+			a1 += (id * 7);   // much faster, no branch
+		}
+	}
+
+	return(a1);
+}
+
+
+void task_timer_stat_update (void)
+{
+	uint32_t  n;
+
+	for (n = 0; n < TASK_TIMER_NUM; ++n) {
+		task_timer_stat_t *stat = &timer_stat[n];
+		if (stat->used == 0)
+			continue;
+		stat->wake_count_dlt = stat->wake_count - stat->wake_count_prev;
+		stat->wake_count_prev = stat->wake_count;
+	}
+}
+
+
+void task_timer_stat_display (void)
+{
+	uint32_t  n;
+
+	printf("    Task_Example_Timer Info +++\r\n");
+	for (n = 0; n < TASK_TIMER_NUM; ++n) {
+		task_timer_stat_t *stat = &timer_stat[n];
+		if (stat->used == 0)
+			continue;
+		printf("      %lu - wake total: %lu, wake delta: %lu\r\n",
+		       n, stat->wake_count, stat->wake_count_dlt);
+	}
+}

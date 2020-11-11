@@ -13,6 +13,9 @@
 #include "kernel/task_ctx.h"
 
 
+// extern run_stat_t run_stat_sched;
+
+
 void idle_loop(void *argv);
 
 int scheduler_core(void);

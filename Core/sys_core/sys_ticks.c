@@ -8,9 +8,9 @@
 #include <stdio.h>
 #include "sys_ticks.h"
 #include "sys_timer.h"
-// #include "kernel/run_stat.h"
+#include "kernel/run_stat.h"
 #include "kernel/sched.h"
-// #include "kernel/sleep.h"
+#include "kernel/sleep.h"
 
 
 uint32_t  sys_tick_per_sec;

@@ -46,8 +46,8 @@ uint32_t task_timer (void *arg)
 		for (m = 0; m < 2000; ++m) {
 			// for some CPU, the wait state of program flash will cause CPU
 			// adds huge wait cycles because of the API call (the branch)
-//			a1 += api_A(1, a1);
-			a1 += (id * 7);   // much faster, no branch
+			a1 += api_A(1, a1);
+//			a1 += (id * 7);   // much faster, no branch
 		}
 	}
 

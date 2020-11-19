@@ -32,6 +32,7 @@ extern uint32_t _estack;
 #define TASK_STACK_SIZE_2_0K      2048  // 2.0 KB
 #define TASK_STACK_SIZE_2_5K      2560  // 2.5 BB
 #define TASK_STACK_SIZE_3_0K      3072  // 3.0 KB
+#define TASK_STACK_SIZE_3_5K      3584  // 3.5 KB
 #define TASK_STACK_SIZE_4_0K      4096  // 4.0 KB
 
 

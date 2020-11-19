@@ -22,8 +22,8 @@ uint32_t  sys_slot_counter;
 volatile uint64_t  sys_clock;
 volatile uint32_t  sys_tick_counter;
 
-// run_stat_que_t run_stat_que_sys_tick;
-// run_stat_t run_stat_sys_tick;
+run_stat_que_t run_stat_que_sys_tick;
+run_stat_t run_stat_sys_tick;
 
 
 static bool sysTickConfig(uint32_t ticks, uint8_t priority)
@@ -60,7 +60,7 @@ void sysTickHandlerCnfg(uint32_t usec, uint32_t ratio)
     sys_tick_per_sec = 1000000 / usec;
     sys_slot_ratio = ratio;
 
-//  run_stat_register_isr("sys_tick", 0, &run_stat_sys_tick, &run_stat_que_sys_tick);
+    run_stat_register_isr("sys_tick", 0, &run_stat_sys_tick, &run_stat_que_sys_tick);
 
     // Configure SysTick to periodically interrupt.
     if (sysTickConfig(usec * cpu_ticks_per_usec, 0) == false) {
@@ -69,19 +69,19 @@ void sysTickHandlerCnfg(uint32_t usec, uint32_t ratio)
     }
     sys_tick_period = sysTickGetPeriod();
 
-//  run_stat_reg_isr_sched();
-//  set_pendsv_irq_priority(15);
+    run_stat_reg_isr_sched();
+    set_pendsv_irq_priority(15);
 //  sysTickStart();
 }
 
 void SysTick_Handler()
 {
-//  uint32_t t_now;
+    uint32_t t_now;
     uint32_t ready, flag;
 
-//  run_time_stack_push_isr(1);
+    run_time_stack_push_isr(1);
 
-//  t_now = sys_timer_get_inline();
+    t_now = sys_timer_get_inline();
 
     sys_clock += sys_tick_period;
     sys_tick_counter++;
@@ -94,15 +94,14 @@ void SysTick_Handler()
         flag = 0;
     }
 
-    ready = 0;  // ready = check_sleep_que(t_now);
+    ready = check_sleep_que(t_now);
 
     if (ready || flag) {
-//      scheduler();
+        scheduler();
     }
-    scheduler();
 
-//  run_stat_sys_tick.run_counter++;
-//  run_stat_sys_tick.time_ttl += run_time_stack_pop_isr(1);
+    run_stat_sys_tick.run_counter++;
+    run_stat_sys_tick.time_ttl += run_time_stack_pop_isr(1);
 }
 
 

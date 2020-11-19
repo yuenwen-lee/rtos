@@ -123,8 +123,8 @@ void task_sys_init(uint32_t stack_size)
 	uint32_t       task_id;
 	task_fifo_t   *task_fifo_p;
 	task_info_t   *task_info_p;
-	uint32_t       stack_p;
-	uint32_t       n;
+	uint32_t       stack_p, size, *ptr;
+	uint32_t       words, n;
 
 	// pri_act_map init
 	pri_act_map.act_b_map  = 0;
@@ -167,7 +167,13 @@ void task_sys_init(uint32_t stack_size)
 
 	// fill the stack with magic pattern
 	stack_p = get_stack_ptr();
-	task_stack_fill_magic(stack_p, task_info_p->stack_size - (task_info_p->stack_base - stack_p));
+    size = task_info_p->stack_size - (task_info_p->stack_base - stack_p);
+	ptr = (uint32_t *) (task_info_p->stack_base - task_info_p->stack_size);
+	words = size / sizeof(uint32_t);
+	for (uint32_t n = 0; n < words; ++n) {
+		ptr[n] = TASK_STACK_RZ_MAGIC;
+	}
+//  task_stack_fill_magic(stack_p, task_info_p->stack_size - (task_info_p->stack_base - stack_p));
 
 	task_id_run = task_id;
 	task_info_run_p = task_info_p;
@@ -206,7 +212,8 @@ uint32_t task_create(void *func_ptr, const char *name, uint32_t priority, uint32
 	task_info_p->name       = name;
 	task_info_p->stack_base = task_stack_base(stack_size);
 	task_info_p->stack_size = stack_size;
-	task_info_p->sp         = (uint32_t *) (task_info_p->stack_base - (16 * sizeof(uint32_t)));
+//	task_info_p->sp         = (uint32_t *) (task_info_p->stack_base - (16 * sizeof(uint32_t)));
+	task_info_p->sp         = (uint32_t *) (task_info_p->stack_base - ((16 + 18) * sizeof(uint32_t)));
 
 	// fill the stack with magic pattern
 	task_stack_fill_magic(task_info_p->stack_base, task_info_p->stack_size);

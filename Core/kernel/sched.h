@@ -5,8 +5,8 @@
  *      Author: wayne
  */
 
-#ifndef _SCHD_H_
-#define _SCHD_H_
+#ifndef _SCHED_H_
+#define _SCHED_H_
 
 #include "sys_core/sys_ticks.h"
 #include "sys_core/sys_timer.h"
@@ -35,4 +35,4 @@ static inline void schedule_halt(void)
 }
 
 
-#endif /* SCHD_H_ */
+#endif /* SCHED_H_ */

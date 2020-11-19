@@ -60,3 +60,41 @@ gen_pend_sv_irq:
     str     r0, [r1]
     bx      lr
     .size   gen_pend_sv_irq, .-gen_pend_sv_irq
+
+
+    .align  2
+    .global PendSV_Handler
+    .thumb
+    .thumb_func
+    .type   PendSV_Handler, %function
+PendSV_Handler:
+    @ args = 0, pretend = 0, frame = 0
+    @ frame_needed = 0, uses_anonymous_args = 0
+    @ link register save eliminated.
+    cpsid   I                       @ Disable core int
+
+    push    {lr}                    @ save the LR
+    bl      scheduler_core          @ jump to the scheduler_core
+    pop     {lr}                    @ restore the LR
+    cmp     r0, #0                  @ check the retrun flag from scheduler_core
+    beq     PendSV_Handler_EXIT     @ return if return flag is 0
+
+    ldr     r1, =task_sp_ptr_now    @ r1 = &task_sp_ptr_now
+    ldr     r2, =task_sp_ptr_next   @ r2 = &task_sp_ptr_next
+    ldr     r1, [r1, #0]            @ r1 = task_sp_ptr_now
+    ldr     r2, [r2, #0]            @ r2 = task_sp_ptr_next
+
+    mov     r0, sp                  @ r0 = sp
+    stmdb   r0!, {r4-r11}           @ push r4~r11
+    str     r0, [r1, #0]            @ *task_sp_ptr_now = r0 (sp)
+
+    ldr     r0, [r2, #0]            @ r0 = task_sp_ptr_next
+    ldmia   r0!, {r4-r11}           @ pop r4~r11
+    mov     sp, r0                  @ swap the sp
+
+@   orr     lr, lr, #0x04           @ Force to new process PSP
+
+PendSV_Handler_EXIT:
+    cpsie   I                       @ enable core int
+    bx      lr
+    .size   PendSV_Handler, .-PendSV_Handler

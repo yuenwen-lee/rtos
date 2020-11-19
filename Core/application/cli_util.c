@@ -5,8 +5,7 @@
  *     Author: ywlee
  */ 
 
-#include <application/cli_util.h>
-#include <application/cmd_util.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,6 +14,8 @@
 #include "kernel/sem.h"
 #include "kernel/ring_buf_event.h"
 #include "sys_device/dev_uart.h"
+#include "cli_util.h"
+#include "cmd_util.h"
 
 
 // ############################################################################
@@ -172,7 +173,7 @@ void cli_info_parser(cmd_info_t *cmd_info)
             // searche the command pattern
             if (cli_cnfg_dbg_trace)
                 printf("%s ", cli->cmnd);      // DBG ............
-            if (strncmp(cli->cmnd, cmd, cmd_len) == 0) {
+            if (strncmp(cli->cmnd, cmd, strlen(cli->cmnd)) == 0) {
                 found = 1;
                 break;  // match !!!
             }
@@ -612,6 +613,8 @@ uint32_t cli_task(void *arg)
 	cli_mng_init();
 	cli_cmd_info.arg_list_size = ARG_LEN;
 
+    cli_mem_init();   // cli for mem checking
+
 	while (1) {
 
 		ring_buf_event_wait(&uart_buf_event, &buf_p, &buf_len);
@@ -782,4 +785,296 @@ void cli_mng_init(void)
     cli_info_attach_node(&cli_mng_root, &cli_mng_root_cnfg);
     cli_info_attach_node(&cli_mng_root, &cli_mng_root_scan);
     cli_info_attach_node(&cli_mng_root, &cli_mng_root_dump);
+}
+
+
+// ############################################################################
+// ##
+// ## Memory Utility
+// ##
+// ############################################################################
+
+// ############################################################################
+// ############################################################################
+
+#define LINE_BYTE_COUNT    20
+
+
+typedef struct cli_mem_reg_info_ {
+    uint32_t    beg;   // address should be in te following range
+    uint32_t    end;   //     beg <= address < end
+    const char *name;  // name of the region
+} cli_mem_reg_info;
+
+
+// STM32F412ZG
+const cli_mem_reg_info cli_mem_reg_array[] = {
+    {0x40000000, 0x40002400, "APB1.1 - TIM 2~7, 12~14"},
+    {0x40002800, 0x40004C00, "    .2 - RTC, WDG, SPI, I2S, USART"},
+    {0x40005400, 0x40006C00, "    .3"},
+    {0x40007000, 0x40007400, "    .4"},
+    {0x40010000, 0x40010800, "APB2.1"},
+    {0x40011000, 0x40011800, "    .2"},
+    {0x40012000, 0x40012400, "    .3"},
+    {0x40012C00, 0x40015400, "    .4"},
+    {0x40016000, 0x40016400, "    .5"},
+    {0x40020000, 0x40022000, "AHB1.1"},
+    {0x40023000, 0x40023400, "    .2"},
+    {0x40023800, 0x40024000, "    .3"},
+    {0x40026000, 0x40026800, "    .4"},
+    {0x50000000, 0x50040000, "AHB2.1"},
+    {0x50060800, 0x50060C00, "    .2"},
+    {0x60000000, 0x70000000, "AHB3.1"},
+    {0x90000000, 0xA0002000, "    .2"},
+    {0xE0000000, 0xE0100000, "Cortex-M4"},
+    {0x20000000, 0x20040000, "RAM 512KB"}
+};
+
+const cli_mem_reg_info cli_mem_reg_flash = {
+    0x08000000, 0x08100000, "FLASH, 1MB"
+};
+
+
+static uint32_t str2int(char *v_string)
+{
+    uint32_t val;
+    
+    if (strlen(v_string) <= 2) {
+        return atoi(v_string);
+    }
+    
+    if (v_string[0] == '0' && v_string[1] == 'x') {
+        sscanf(v_string, "%lx", &val);
+        return val;
+    } else {
+        return atoi(v_string);
+    }
+}
+
+
+static bool cli_mem_reg_rd_valid(uint32_t addr, uint32_t size)
+{
+    uint32_t beg = addr;
+    uint32_t end = addr + size;
+
+    if (beg >= cli_mem_reg_flash.beg && end <= cli_mem_reg_flash.end) {
+        return true;
+    }
+
+    for (int n = 0; n < sizeof(cli_mem_reg_array)/sizeof(cli_mem_reg_info); ++n) {
+        if (beg >= cli_mem_reg_array[n].beg && end <= cli_mem_reg_array[n].end) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+static void cli_mem_dump_char(uint32_t beg, uint32_t size)
+{
+    uint32_t addr;
+    int count = 0;
+
+    while (count < size) {
+
+        addr = beg + count;
+        if ((count % LINE_BYTE_COUNT) == 0) {
+            printf("0x%08lx - %02x", addr, *((uint8_t *) addr));
+        } else {
+            printf(" %02x", *((uint8_t *) addr));
+        }
+
+        count++;
+        if ((count % LINE_BYTE_COUNT) == 0) {
+            printf("\r\n");
+        }
+    }
+    if ((count % LINE_BYTE_COUNT)) {
+        printf("\r\n");
+    }
+
+    printf("\r\n");
+}
+
+
+static void cli_mem_dump_short(uint32_t beg, uint32_t size)
+{
+    uint32_t addr;
+    int count = 0;
+
+    while (count < size) {
+
+        addr = beg + count;
+        if ((count % LINE_BYTE_COUNT) == 0) {
+            printf("0x%08lx - %04x", addr, *((uint16_t *) addr));
+        } else {
+            printf(" %04x", *((uint16_t *) addr));
+        }
+
+        count += 2;
+        if ((count % LINE_BYTE_COUNT) == 0) {
+            printf("\r\n");
+        }
+    }
+    if ((count % LINE_BYTE_COUNT)) {
+        printf("\r\n");
+    }
+
+    printf("\r\n");
+}
+
+
+static void cli_mem_dump_long(uint32_t beg, uint32_t size)
+{
+    uint32_t addr;
+    int count = 0;
+
+    while (count < size) {
+        
+        addr = beg + count;
+        if ((count % LINE_BYTE_COUNT) == 0) {
+            printf("0x%08lx - %08lx", addr, *((uint32_t *) addr));
+        } else {
+            printf(" %08lx", *((uint32_t *) addr));
+        }
+
+        count += 4;
+        if ((count % LINE_BYTE_COUNT) == 0) {
+            printf("\r\n");
+        }
+    }
+    if ((count % LINE_BYTE_COUNT)) {
+        printf("\r\n");
+    }
+
+    printf("\r\n");
+}
+
+
+static int cli_cb_mem_root_dump(cmd_info_t *cmd_info)
+{
+    const char *help = "usuage: <mode> <addr> <size_aft> [size_bfr]\r\n"
+                       "        <mode> - c: char, s: short, l: long\r\n";
+    arg_info_t *arg;
+    uint32_t addr, size_a, size_b, size;
+    char mode;
+
+    if (!cmd_arg_avail(cmd_info) || cmd_arg_1st_is_help(cmd_info)) {
+        printf("%s\r\n", help);
+        goto EXIT;
+    }
+
+    arg = cmd_arg_pop(cmd_info);
+    if (arg == NULL) {
+        printf("   !!! missing <mode> !!!\r\n");
+        goto EXIT;
+    }
+    switch (*arg->beg) {
+    case 'c':
+        mode = 'c';
+        break;
+    case 's':
+        mode = 's';
+        break;
+    case 'l':
+        mode = 'l';
+        break;
+    default:
+        printf("   !!! invalid mode %c !!!\r\n", *arg->beg);
+        goto EXIT;
+    }
+
+    arg = cmd_arg_pop(cmd_info);
+    if (arg == NULL) {
+        printf("   !!! missing <addr> !!!\r\n");
+        goto EXIT;
+    }
+    addr = str2int(arg->beg);
+
+    arg = cmd_arg_pop(cmd_info);
+    if (arg == NULL) {
+        printf("   !!! missing <size_aft> !!!\r\n");
+        goto EXIT;
+    }
+    size_a = str2int(arg->beg);
+
+    arg = cmd_arg_pop(cmd_info);
+    if (arg != NULL) {
+        size_b = str2int(arg->beg);
+    } else {
+        size_b = 0;
+    }
+
+    addr = addr - size_b;
+    size = size_a + size_b;    
+    switch (mode) {
+    case 's':
+        addr &= 0xFFFFFFFE;   // aligned to 2 byte
+        size &= 0xFFFFFFFE;   // aligned to 2 byte
+        break;
+    case 'l':
+        addr &= 0xFFFFFFFC;   // aligned to 4 byte
+        size &= 0xFFFFFFFC;   // aligned to 4 byte
+        break;
+    default:
+        break;
+    }
+
+    printf("addr: 0x%08lx, size: %lu byte, mode '%c'\r\n", addr, size, mode);
+    if (!cli_mem_reg_rd_valid(addr, size)) {
+        printf("    !!! invalid memory region for read\r\n");
+        goto EXIT;
+    }
+    printf("\n");
+
+    switch (mode) {
+    case 'c':
+        cli_mem_dump_char(addr, size);
+        break;
+    case 's':
+        cli_mem_dump_short(addr, size);
+        break;
+    default:
+        cli_mem_dump_long(addr, size);
+        break;
+    }
+
+ EXIT:
+    return 0;
+}
+
+
+static int cli_cb_mem_root_map(cmd_info_t *cmd_info)
+{
+    int n;
+    for (n = 0; n < sizeof(cli_mem_reg_array)/sizeof(cli_mem_reg_info); ++n) {
+        printf("   %2d: 0x%08lx ~ 0x%08lx   %s\r\n", n,
+               cli_mem_reg_array[n].beg, cli_mem_reg_array[n].end, cli_mem_reg_array[n].name);
+    }
+    printf("   %2d: 0x%08lx ~ 0x%08lx   %s\r\n", n,
+           cli_mem_reg_flash.beg, cli_mem_reg_flash.end, cli_mem_reg_flash.name);
+    return 0;
+}
+
+
+// ############################################################################
+// ############################################################################
+
+static cli_info_t cli_mem_root;
+static cli_info_t cli_mem_root_map;
+static cli_info_t cli_mem_root_dump;
+
+
+void cli_mem_init(void)
+{
+    cli_info_init_node(&cli_mem_root, "mem", "mem dump/modify");
+	cli_info_attach_root(&cli_mem_root);
+
+	cli_info_init_leaf(&cli_mem_root_map, "map", "show the memory map",
+	                   cli_cb_mem_root_map);
+	cli_info_attach_node(&cli_mem_root, &cli_mem_root_map);
+
+	cli_info_init_leaf(&cli_mem_root_dump, "dump", "dump memory region",
+	                   cli_cb_mem_root_dump);
+	cli_info_attach_node(&cli_mem_root, &cli_mem_root_dump);
 }

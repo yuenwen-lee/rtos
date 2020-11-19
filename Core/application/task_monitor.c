@@ -92,7 +92,11 @@ void monitor_display_task(void *arg)
 		task_suspend();
 
 		if (cli_run_stat_root_load_display_enable) {
-			putchar(ASCII_FF);
+//			putchar(ASCII_FF);
+            putchar('\033');
+            putchar('[');
+            putchar('2');
+            putchar('J');
 			monitor_display_ctx_stat();
 			run_stat_display();
 		}

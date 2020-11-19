@@ -73,4 +73,7 @@ void cli_info_dump_chain_walk(void);
 void cli_info_dump_full_tree(void);
 void cli_info_help_trace_root(void);
 
+void cli_mem_init(void);
+
+
 #endif /* _CLI_UTIL_H_ */

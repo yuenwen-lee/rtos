@@ -122,15 +122,16 @@ static int cli_cb_task_root_list(cmd_info_t *cmd_info)
 	char stat_buf[10];
 	uint32_t n;
 
-	printf("Id   Name          State      Rdy_Count\r\n");
-	printf("--   ------------  ---------  ---------\r\n");
+	printf("Id   Name          Pri  State      Rdy_Count\r\n");
+	printf("--   ------------  ---  ---------  ---------\r\n");
 	for (n = 0; n < TASK_NUMB; ++n) {
 		info_p = &task_info_pool[n];
 		if (info_p->state == TASK_STATE_UNUSED) {
 			continue;
 		}
-		printf("%2d - %s  %s  %lu\r\n", info_p->id,
+		printf("%2d - %s  %3u  %s  %lu\r\n", info_p->id,
 		       string_fill_buf(name_buf, sizeof(name_buf), info_p->name),
+               info_p->priority,
 		       string_fill_buf(stat_buf, sizeof(stat_buf), task_state_name[info_p->state]),
 		       info_p->run_stat.run_counter);
 	}	

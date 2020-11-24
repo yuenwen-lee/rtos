@@ -5,6 +5,7 @@
  *      Author: wayne
  */
 
+#include <math.h>
 #include "func_example.h"
 
 int api_A(int a0, int b0)
@@ -25,4 +26,22 @@ int api_C(int a2, int b2)
 {
 	int c2 = a2 - b2;
 	return(c2);
+}
+
+
+float api_sinf(float w)
+{
+    volatile float u, v;
+    u = sinf(w);
+    v = asinf(u);
+    return v;
+}
+
+
+float api_tanf(float w)
+{
+    volatile float u, v;
+    u = tanf(w);
+    v = atanf(u);
+    return v;
 }

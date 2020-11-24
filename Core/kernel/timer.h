@@ -20,7 +20,7 @@ typedef struct timer_obj_ {
 
 void timer_init(timer_obj_t *timer_p, uint32_t msec);
 void timer_wait(timer_obj_t *timer_p);
-void timer_wait_fixed(timer_obj_t *timer_p);
+uint32_t timer_wait_fixed(timer_obj_t *timer_p);
 
 
 #endif /* _TIMER_H_ */

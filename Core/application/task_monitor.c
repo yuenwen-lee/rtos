@@ -58,8 +58,9 @@ void monitor_task(void *arg)
 		t_samp = sys_timer_get_inline();
 #endif // BENCHMARK_SCHED
 		board_toggle_led();
+        task_timer_stat_update();
 
-		run_stat_update();
+        run_stat_update();
 		if (cli_task_root_stack_check_enable) {
 			monitor_task_stack_usage();
 		}
@@ -99,6 +100,7 @@ void monitor_display_task(void *arg)
             putchar('J');
 			monitor_display_ctx_stat();
 			run_stat_display();
+            task_timer_stat_display();
 		}
 
 		if (cli_task_root_stack_check_enable) {

@@ -23,10 +23,14 @@ void task_dummy_AA_dump(void);
 
 typedef struct task_timer_stat_ {
 	uint32_t used;
+	uint32_t wake_num;
 	uint32_t wake_count;
 	uint32_t wake_count_prev;
 	uint32_t wake_count_dlt;
-	uint32_t wake_num;
+    uint32_t overdue;
+    uint32_t overdue_prev;
+    uint32_t overdue_delt;
+    float    math_diff;
 } task_timer_stat_t;
 
 typedef struct task_timer_cnfg_ {
@@ -36,6 +40,8 @@ typedef struct task_timer_cnfg_ {
 
 
 uint32_t task_timer(void *arg);
+uint32_t task_timer_sinf(void *arg);
+uint32_t task_timer_tanf(void *arg);
 void task_timer_stat_update(void);
 void task_timer_stat_display(void);
 

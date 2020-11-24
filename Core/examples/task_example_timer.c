@@ -27,6 +27,7 @@ uint32_t task_timer (void *arg)
 	timer_obj_t  task_A_timer;
 	uint32_t  id;
 	uint32_t  a1, m;
+    uint32_t  overdue;
 
 	cnfg = (task_timer_cnfg_t *) arg;
 	id = cnfg->id;
@@ -34,14 +35,17 @@ uint32_t task_timer (void *arg)
 		stat = &timer_stat[id];
 		stat->used = 1;
 		stat->wake_num = 1000 / cnfg->period;
+        stat->overdue = 0;
 	}
 	timer_init(&task_A_timer, cnfg->period);
 
 	a1 = 0;
 	while (1) {
-		timer_wait_fixed(&task_A_timer);
-		if (stat)
+		overdue = timer_wait_fixed(&task_A_timer);
+		if (stat) {
 			stat->wake_count++;
+            stat->overdue += overdue;
+        }
 
 		for (m = 0; m < 2000; ++m) {
 			// for some CPU, the wait state of program flash will cause CPU
@@ -50,6 +54,82 @@ uint32_t task_timer (void *arg)
 //			a1 += (id * 7);   // much faster, no branch
 		}
 	}
+
+	return(a1);
+}
+
+
+uint32_t task_timer_sinf (void *arg)
+{
+	task_timer_cnfg_t *cnfg;
+	task_timer_stat_t *stat = NULL;
+	timer_obj_t  task_A_timer;
+	uint32_t  id, m;
+    uint32_t  overdue = 0;
+	volatile float org, a1;
+
+	cnfg = (task_timer_cnfg_t *) arg;
+	id = cnfg->id;
+	if (id < TASK_TIMER_NUM) {
+		stat = &timer_stat[id];
+		stat->used = 1;
+		stat->wake_num = 1000 / cnfg->period;
+        stat->overdue = 0;
+	}
+	timer_init(&task_A_timer, cnfg->period);
+
+    org = (3.141592653f / 3.0f);
+    a1 = org;
+	while (1) {
+//		overdue = timer_wait_fixed(&task_A_timer);
+		if (stat) {
+			stat->wake_count++;
+            stat->overdue += overdue;
+            stat->math_diff = org - a1;
+        }
+
+		for (m = 0; m < 900; ++m) {
+			a1 = api_sinf(a1);
+		}
+	}
+
+	return(a1);
+}
+
+
+uint32_t task_timer_tanf (void *arg)
+{
+	task_timer_cnfg_t *cnfg;
+	task_timer_stat_t *stat = NULL;
+	timer_obj_t  task_A_timer;
+	uint32_t  id, m;
+    uint32_t  overdue = 0;
+	volatile float org, a1;
+
+	cnfg = (task_timer_cnfg_t *) arg;
+	id = cnfg->id;
+	if (id < TASK_TIMER_NUM) {
+		stat = &timer_stat[id];
+		stat->used = 1;
+		stat->wake_num = 1000 / cnfg->period;
+        stat->overdue = 0;
+	}
+	timer_init(&task_A_timer, cnfg->period);
+
+    org = (3.141592653f / 3.0f);
+	a1 = org;
+	while (1) {
+//		overdue = timer_wait_fixed(&task_A_timer);
+		if (stat) {
+			stat->wake_count++;
+            stat->overdue += overdue;
+            stat->math_diff = org - a1;
+        }
+
+		for (m = 0; m < 900; ++m) {
+			a1 = api_tanf(a1);
+		}
+    }
 
 	return(a1);
 }
@@ -65,6 +145,8 @@ void task_timer_stat_update (void)
 			continue;
 		stat->wake_count_dlt = stat->wake_count - stat->wake_count_prev;
 		stat->wake_count_prev = stat->wake_count;
+        stat->overdue_delt = stat->overdue - stat->overdue_prev;
+        stat->overdue_prev = stat->overdue;
 	}
 }
 
@@ -78,7 +160,7 @@ void task_timer_stat_display (void)
 		task_timer_stat_t *stat = &timer_stat[n];
 		if (stat->used == 0)
 			continue;
-		printf("      %lu - wake total: %lu, wake delta: %lu\r\n",
-		       n, stat->wake_count, stat->wake_count_dlt);
+		printf("      %lu - wake total: %lu, wake delta: %lu, overdue delta: %3lu, math_diff: %e\r\n",
+		       n, stat->wake_count, stat->wake_count_dlt, stat->overdue_delt, stat->math_diff);
 	}
 }

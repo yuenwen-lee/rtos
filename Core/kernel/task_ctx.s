@@ -7,7 +7,7 @@
 
     .syntax unified
     .cpu cortex-m4
-    .fpu softvfp
+    .fpu fpv4-sp-d16
     .text
 
     /* ********************************************************
@@ -86,9 +86,11 @@ PendSV_Handler:
 
     mov     r0, sp                  @ r0 = sp
     stmdb   r0!, {r4-r11}           @ push r4~r11
+    vstmdb  r0!, {s16-s31}          @ push s16_s31
     str     r0, [r1, #0]            @ *task_sp_ptr_now = r0 (sp)
 
     ldr     r0, [r2, #0]            @ r0 = task_sp_ptr_next
+    vldmia  r0!, {s16-s31}          @ pop s16~s31
     ldmia   r0!, {r4-r11}           @ pop r4~r11
     mov     sp, r0                  @ swap the sp
 

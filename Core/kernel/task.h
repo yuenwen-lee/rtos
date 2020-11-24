@@ -48,7 +48,6 @@ typedef enum task_state_ {
 	TASK_STATE_N
 } task_state_t;
 
-
 typedef struct task_info_ {
 	que_t         que_task_info;
 	uint16_t      id;
@@ -63,25 +62,21 @@ typedef struct task_info_ {
 	run_stat_t    run_stat;
 } task_info_t __attribute__((aligned(4)));
 
-
 typedef struct task_fifo_ {
 	que_t         que_head_task_info;   // queue head for linking task_info_t
 	uint16_t      task_numb;
 	uint16_t      priority;
 } task_fifo_t __attribute__((aligned(4)));
 
-
 typedef struct pri_act_map_ {
 	uint32_t      act_b_map;
 	uint32_t      act_pri_num;
 } pri_act_map_t;
 
-
 typedef struct ready_tree_ {
 	pri_act_map_t pri_act_map;
 	task_fifo_t   task_fifo[TASK_FIFO_NUMB];
 } ready_que_t;
-
 
 
 extern task_fifo_t   task_fifo_pool[];
@@ -97,8 +92,8 @@ extern uint32_t      task_ctx_counter;
 extern const char *task_state_name[TASK_STATE_N];
 
 
-
 void task_stack_init(uint32_t *sp, void *func_ptr, uint32_t argv);
+void task_stack_init_debug(uint32_t *sp, void *func_ptr, uint32_t argv, uint32_t pfx);
 void task_sys_init(uint32_t stack_size);
 
 uint32_t task_create(void *func_ptr, const char *name, uint32_t priority,

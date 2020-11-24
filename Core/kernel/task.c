@@ -21,6 +21,14 @@
 #include "utility/bits_op_tool.h"
 
 
+
+#define STACK_SIZE_FLOAT_FRAME_A   16
+#define STACK_SIZE_BASIC_FRAME     16
+#define STACK_SIZE_FLOAT_FRAME_B   18
+#define STACK_SIZE_FLOAT_FRAME     (STACK_SIZE_FLOAT_FRAME_A + STACK_SIZE_FLOAT_FRAME_B)
+
+
+
 pri_act_map_t pri_act_map;
 
 uint32_t      task_next_stack_start = ((uint32_t) &_estack);
@@ -95,26 +103,65 @@ uint32_t task_stack_check_usage(task_info_t *info_p)
 }
 
 
+void task_stack_init_debug(uint32_t *sp, void *func_ptr, uint32_t argv, uint32_t pfx)
+{
+    uint32_t *ptr;
+    uint32_t r_idx, ptrn;
+
+    pfx = (pfx & 0xffff) << 16;
+    
+    // s16 ~ s31
+    ptr = sp;
+    for (int n = 0; n < STACK_SIZE_FLOAT_FRAME_A; ++n) {
+        r_idx = (n + 16) & 0xFF;
+        ptrn = pfx | ((r_idx << 8) | r_idx);
+        ptr[n] = ptrn;
+    }
+
+    // r04 ~ r11, r00 ~ r03, r12, r14 (lr), pc, xPSR
+    ptr = sp + STACK_SIZE_FLOAT_FRAME_A;
+    ptr[ 0] = pfx | 0x0404L;                  // r4
+	ptr[ 1] = pfx | 0x0505L;                  // r5
+	ptr[ 2] = pfx | 0x0606L;                  // r6
+	ptr[ 3] = pfx | 0x0707L;                  // r7
+	ptr[ 4] = pfx | 0x0808L;                  // r8
+	ptr[ 5] = pfx | 0x0909L;                  // r9
+	ptr[ 6] = pfx | 0x1010L;                  // r10
+	ptr[ 7] = pfx | 0x1111L;                  // r11
+
+	ptr[ 8] = argv;                           // r0
+	ptr[ 9] = pfx | 0x0101L;                  // r1
+	ptr[10] = pfx | 0x0202L;                  // r2
+	ptr[11] = pfx | 0x0303L;                  // r3
+
+	ptr[12] = pfx | 0x1212L;                  // r12
+	ptr[13] = 0x01000000L;                    // r14 (lr)
+	ptr[14] = ((unsigned int) func_ptr) | 1;  // pc
+	ptr[15] = 0x01000000L;                    // xPSR
+
+    // s00 ~ s15
+    ptr = sp + (STACK_SIZE_FLOAT_FRAME_A + STACK_SIZE_BASIC_FRAME);
+    for (int n = 0; n < STACK_SIZE_FLOAT_FRAME_A; ++n) {
+        r_idx = n & 0xFF;
+        ptrn =  ((pfx & 0xffff) << 16) | ((r_idx << 8) | r_idx);
+        ptr[n] = ptrn;
+    }
+    ptr[16] = 0x0;    // FPSR
+    ptr[17] = 0x0;    // stuff
+}
+
+
 void task_stack_init(uint32_t *sp, void *func_ptr, uint32_t argv)
 {
-	sp[ 0] = 0x04040404L;                    // r4
-	sp[ 1] = 0x05050505L;                    // r5
-	sp[ 2] = 0x06060606L;                    // r6
-	sp[ 3] = 0x07070707L;                    // r7
-	sp[ 4] = 0x08080808L;                    // r8
-	sp[ 5] = 0x09090909L;                    // r9
-	sp[ 6] = 0x10101010L;                    // r10
-	sp[ 7] = 0x11111111L;                    // r11
+    uint32_t *ptr = sp;
+    for (int n = 0; n < (STACK_SIZE_BASIC_FRAME + STACK_SIZE_FLOAT_FRAME); ++n) {
+        ptr[n] = 0; 
+    }
 
-	sp[ 8] = argv;                           // r0
-	sp[ 9] = 0x01010101L;                    // r1
-	sp[10] = 0x02020202L;                    // r2
-	sp[11] = 0x03030303L;                    // r3
-
-	sp[12] = 0x12121212L;                    // r12
-	sp[13] = 0x01000000L;                    // r14 (lr)
-	sp[14] = ((unsigned int) func_ptr) | 1;  // pc
-	sp[15] = 0x01000000L;                    // xPSR
+	sp[STACK_SIZE_BASIC_FRAME +  8] = argv;                           // r0
+	sp[STACK_SIZE_BASIC_FRAME + 13] = 0x01000000L;                    // r14 (lr)
+	sp[STACK_SIZE_BASIC_FRAME + 14] = ((unsigned int) func_ptr) | 1;  // pc
+	sp[STACK_SIZE_BASIC_FRAME + 15] = 0x01000000L;                    // xPSR
 }
 
 
@@ -212,12 +259,16 @@ uint32_t task_create(void *func_ptr, const char *name, uint32_t priority, uint32
 	task_info_p->name       = name;
 	task_info_p->stack_base = task_stack_base(stack_size);
 	task_info_p->stack_size = stack_size;
-//	task_info_p->sp         = (uint32_t *) (task_info_p->stack_base - (16 * sizeof(uint32_t)));
-	task_info_p->sp         = (uint32_t *) (task_info_p->stack_base - ((16 + 18) * sizeof(uint32_t)));
+//	task_info_p->sp         = (uint32_t *) (task_info_p->stack_base -
+//                                          (STACK_SIZE_BASIC_FRAME * sizeof(uint32_t)));
+	task_info_p->sp         = (uint32_t *) (task_info_p->stack_base -
+                                            ((STACK_SIZE_BASIC_FRAME +
+                                              STACK_SIZE_FLOAT_FRAME) * sizeof(uint32_t)));
 
 	// fill the stack with magic pattern
 	task_stack_fill_magic(task_info_p->stack_base, task_info_p->stack_size);
 	task_stack_init(task_info_p->sp, func_ptr, (uint32_t) arg);
+//	task_stack_init_debug(task_info_p->sp, func_ptr, (uint32_t) arg, task_id);
 
 	cpu_irq_enter_critical();    // __disable_irq();
 	// put the task to ready tree

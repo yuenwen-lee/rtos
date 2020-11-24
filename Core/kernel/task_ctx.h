@@ -13,8 +13,10 @@
 int get_stack_ptr(void);
 int get_sp_main(void);
 int get_sp_process(void);
+uint32_t push_fp(void);
 
 void gen_pend_sv_irq(void);
+void gen_svc_irq(uint32_t arg);
 
 
 static inline void set_pendsv_irq_priority(uint32_t pri)

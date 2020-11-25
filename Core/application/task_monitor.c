@@ -57,7 +57,7 @@ void monitor_task(void *arg)
 #if BENCHMARK_MONIT
 		t_samp = sys_timer_get_inline();
 #endif // BENCHMARK_SCHED
-		board_toggle_led();
+		board_toggle_led_monitor();
         task_timer_stat_update();
 
         run_stat_update();

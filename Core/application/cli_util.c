@@ -14,6 +14,7 @@
 #include "kernel/sem.h"
 #include "kernel/ring_buf_event.h"
 #include "sys_device/dev_uart.h"
+#include "sys_device/dev_board.h"
 #include "cli_util.h"
 #include "cmd_util.h"
 
@@ -633,6 +634,8 @@ uint32_t cli_task(void *arg)
 		cli_info_parser(&cli_cmd_info);
 
 		ring_buf_event_seg_free(&uart_buf_event);
+
+        board_blink_led_cli();
 	}
 
 	return 0;

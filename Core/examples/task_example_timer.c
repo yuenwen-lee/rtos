@@ -81,14 +81,14 @@ uint32_t task_timer_sinf (void *arg)
     org = (3.141592653f / 3.0f);
     a1 = org;
 	while (1) {
-//		overdue = timer_wait_fixed(&task_A_timer);
+		overdue = timer_wait_fixed(&task_A_timer);
 		if (stat) {
 			stat->wake_count++;
             stat->overdue += overdue;
             stat->math_diff = org - a1;
         }
 
-		for (m = 0; m < 900; ++m) {
+		for (m = 0; m < 400; ++m) {
 			a1 = api_sinf(a1);
 		}
 	}
@@ -119,14 +119,14 @@ uint32_t task_timer_tanf (void *arg)
     org = (3.141592653f / 3.0f);
 	a1 = org;
 	while (1) {
-//		overdue = timer_wait_fixed(&task_A_timer);
+		overdue = timer_wait_fixed(&task_A_timer);
 		if (stat) {
 			stat->wake_count++;
             stat->overdue += overdue;
             stat->math_diff = org - a1;
         }
 
-		for (m = 0; m < 900; ++m) {
+		for (m = 0; m < 400; ++m) {
 			a1 = api_tanf(a1);
 		}
     }

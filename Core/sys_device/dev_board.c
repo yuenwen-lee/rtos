@@ -19,6 +19,6 @@ void board_toggle_led_monitor(void)
 void board_blink_led_cli(void)
 {
     BSP_LED_On(LED2);
-    sleep_msec(100);
+    sleep_msec(50);
     BSP_LED_Off(LED2);
 }

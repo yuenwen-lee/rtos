@@ -622,6 +622,7 @@ uint32_t cli_task(void *arg)
 		if (buf_len == 0) {
 			continue;
 		}
+        board_blink_led_cli();
 
 		cli_cmd_info.cmd_buf = buf_p;
 		cli_cmd_info.cmd_len = buf_len;
@@ -634,8 +635,6 @@ uint32_t cli_task(void *arg)
 		cli_info_parser(&cli_cmd_info);
 
 		ring_buf_event_seg_free(&uart_buf_event);
-
-        board_blink_led_cli();
 	}
 
 	return 0;

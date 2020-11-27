@@ -154,13 +154,22 @@ void task_timer_stat_update (void)
 void task_timer_stat_display (void)
 {
 	uint32_t  n;
+    const char *rst;
 
-	printf("    Task_Example_Timer Info +++\r\n");
+	printf("\nTask_Example_Timer Info +++\r\n");
 	for (n = 0; n < TASK_TIMER_NUM; ++n) {
 		task_timer_stat_t *stat = &timer_stat[n];
-		if (stat->used == 0)
+		if (stat->used == 0) {
 			continue;
-		printf("      %lu - wake total: %lu, wake delta: %lu, overdue delta: %3lu, math_diff: %e\r\n",
-		       n, stat->wake_count, stat->wake_count_dlt, stat->overdue_delt, stat->math_diff);
+        }
+
+        if (stat->math_diff == 0.0f) {
+            rst = "GOOD";
+        } else {
+            rst = "BAD";
+        }
+        printf("    %lu - wake total: %lu, wake delta: %lu, overdue delta: %3lu, math_diff: %e (%s)\r\n",
+		       n, stat->wake_count, stat->wake_count_dlt, stat->overdue_delt, stat->math_diff, rst);
 	}
+    printf("\n");
 }

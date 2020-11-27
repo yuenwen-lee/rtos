@@ -34,3 +34,15 @@ gen_svc_irq:
     svc     #0
     bx      lr
     .size   gen_svc_irq, .-gen_svc_irq
+
+
+    .align  2
+    .global SVC_Handler
+    .thumb
+    .thumb_func
+    .type   SVC_Handler, %function
+SVC_Handler:
+    nop
+    nop
+    bx      lr
+    .size   SVC_Handler, .-SVC_Handler

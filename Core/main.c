@@ -14,29 +14,24 @@
   *                        opensource.org/licenses/BSD-3-Clause
   *
   ******************************************************************************
-  */
+  **/
 #include <stdio.h>
 
 #include "stm32f4xx/main.h"
 #include "sys_core/sys_timer.h"
 #include "sys_core/sys_ticks.h"
-#include "sys_core/sys_util.h"
 #include "sys_device/dev_uart.h"
 #include "kernel/task.h"
-#include "kernel/task_ctx.h"
 #include "kernel/sched.h"
 #include "application/task_monitor.h"
 #include "application/cmd_util.h"
 #include "application/cli_util.h"
 #include "examples/task_example.h"
-#include "utility/bench.h"
 
 
 static void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART3_UART_Init(void);
-static void system_info_summary(void);
-void system_bringup_test(void);
 void MX_USB_OTG_FS_PCD_Init(void);
 
 
@@ -44,12 +39,14 @@ PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
 
 /**
+  ******************************************************************************
   * @brief  The application entry point.
   * @retval int
-  */
+  ******************************************************************************
+  **/
 int main(void)
 {
-    task_sys_init(TASK_STACK_SIZE_3_0K);
+    task_sys_init(TASK_STACK_SIZE_1_5K);
 
     // ############################################
     // ##  Platform/Hardware related init .........
@@ -65,45 +62,40 @@ int main(void)
 
     sys_timer_init();
     sys_timer_start();
-    sysTickHandlerCnfg(1000, 5);
+    sysTickHandlerCnfg(1000, 4);   // 4 --> round-robin 250Hz
 
     // ############################################
     // ##  Basic kernel service tasks .............
     // ############################################
     task_id_monitor_display = task_create(monitor_display_task, "Display", PRIORITY_LOWEST + 2,
-                                          TASK_STACK_SIZE_4_0K, NULL);
+                                          TASK_STACK_SIZE_1_5K, NULL);
     task_id_monitor = task_create(monitor_task, "Monitor", PRIORITY_HIGHEST,
-                                  TASK_STACK_SIZE_4_0K, (void *) task_id_monitor_display);
-    task_create(cli_task, "CLI", PRIORITY_LOWEST + 2, TASK_STACK_SIZE_4_0K, NULL);
+                                  TASK_STACK_SIZE_0_5K, (void *) task_id_monitor_display);
+    task_create(cli_task, "CLI", PRIORITY_LOWEST + 2, TASK_STACK_SIZE_1_5K, NULL);
 
     // ############################################
     // ##  Application or User task() .............
     // ############################################
     task_timer_cnfg_t ex1;
     ex1.id = 0;
-    ex1.period = 4;
-    task_create(task_timer, "Exmp_1", PRIORITY_LOWEST + 3, TASK_STACK_SIZE_4_0K, &ex1);
+    ex1.period = 10;
+    task_create(task_timer_sinf, "Exmp_1", PRIORITY_LOWEST + 4, TASK_STACK_SIZE_1_0K, &ex1);
 
     task_timer_cnfg_t ex2;
     ex2.id = 1;
-    ex2.period = 4;
-    task_create(task_timer, "Exmp_2", PRIORITY_LOWEST + 3, TASK_STACK_SIZE_4_0K, &ex2);
+    ex2.period = 10;
+    task_create(task_timer_tanf, "Exmp_2", PRIORITY_LOWEST + 4, TASK_STACK_SIZE_1_0K, &ex2);
 
     task_timer_cnfg_t ex3;
     ex3.id = 2;
-    ex3.period = 4;
-    task_create(task_timer, "Exmp_3", PRIORITY_LOWEST + 3, TASK_STACK_SIZE_4_0K, &ex3);
+    ex3.period = 10;
+    task_create(task_timer_sinf, "Exmp_3", PRIORITY_LOWEST + 4, TASK_STACK_SIZE_1_0K, &ex3);
 
     task_timer_cnfg_t ex4;
     ex4.id = 3;
-    ex4.period = 4;
-    task_create(task_timer, "Exmp_4", PRIORITY_LOWEST + 3, TASK_STACK_SIZE_4_0K, &ex4);
+    ex4.period = 10;
+    task_create(task_timer_tanf, "Exmp_4", PRIORITY_LOWEST + 4, TASK_STACK_SIZE_1_0K, &ex4);
 
-    // dump basic system information ..............
-//  system_bringup_test();
-    system_info_summary();
-//  printf(" ...... %f\r\n", 3.14f);
-    
     // ############################################
     // ##  Start SysTick, scheduler will run ......
     // ############################################
@@ -113,10 +105,12 @@ int main(void)
 }
 
 
-/** **********************************************
+/**
+  ******************************************************************************
   * @brief System Clock Configuration
   * @retval None
-  * ********************************************** */
+  ******************************************************************************
+  **/
 static void SystemClock_Config(void)
 {
     RCC_OscInitTypeDef RCC_OscInitStruct = {0};
@@ -162,11 +156,13 @@ static void SystemClock_Config(void)
 }
 
 
-/** **********************************************
+/**
+  ******************************************************************************
   * @brief USB_OTG_FS Initialization Function
   * @param None
   * @retval None
-  * ********************************************** */
+  ******************************************************************************
+  **/
 void MX_USB_OTG_FS_PCD_Init(void)
 {
     hpcd_USB_OTG_FS.Instance = USB_OTG_FS;
@@ -187,10 +183,12 @@ void MX_USB_OTG_FS_PCD_Init(void)
 
 
 /**
+  ******************************************************************************
   * @brief USART3 Initialization Function
   * @param None
   * @retval None
-  */
+  ******************************************************************************
+  **/
 #define UART_BAUDRATE     115200
 #define UART_PRIORITY     14
 
@@ -222,9 +220,11 @@ static void MX_USART3_UART_Init(void)
 
 
 /**
+  ******************************************************************************
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
+  ******************************************************************************
   **/
 static void MX_GPIO_Init(void)
 {
@@ -272,59 +272,12 @@ static void MX_GPIO_Init(void)
 }
 
 
-/** **********************************************
-  *
-  *
-  * ********************************************** */
-static void system_info_summary(void)
-{
-    printf("CPU Hz: %lu\r\n", cpu_ticks_per_sec);
-
-    system_info_linker();
-    uint32_t sp = (uint32_t) get_stack_ptr();
-    printf("Stack Ptr: 0x%08lx\r\n", sp);
-    system_info_heap();
-
-    task_info_dump_all();
-    task_fifo_dump_all();
-    task_dump_pri_act_map();
-    task_fifo_t *fifo = task_get_highest_from_pri_chain();
-    printf(">>> Highest Priority FIFO %p <<<\r\n", fifo);
-    task_fifo_dump(fifo);
-    system_nvic_priority_dump();
-}
-
-
-/** **********************************************
-  *
-  *
-  * ********************************************** */
-void system_bringup_test(void)
-{
-    printf("\r\n\r\n\r\n");
-
-    printf("sysClcokFreq: %lu\r\n", cpu_ticks_per_sec);
-
-    volatile uint32_t count_A = sys_timer_get_inline();
-    volatile uint32_t count_B = sys_timer_get_inline();
-    printf("timer diff: %lu\r\n", (count_B - count_A));
-
-    volatile uint32_t count;
-    count = sys_timer_get_inline();
-    printf("timer counter: %lu\r\n", count);
-    count = sys_timer_get_inline();
-    printf("timer counter: %lu\r\n", count);
-
-    bench_speed();
-
-    mallocTest();
-}
-
-
 /**
+  ******************************************************************************
   * @brief  This function is executed in case of error occurrence.
   * @retval None
-  */
+  ******************************************************************************
+  **/
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
@@ -333,14 +286,17 @@ void Error_Handler(void)
   /* USER CODE END Error_Handler_Debug */
 }
 
+
 #ifdef  USE_FULL_ASSERT
 /**
+  ******************************************************************************
   * @brief  Reports the name of the source file and the source line number
   *         where the assert_param error has occurred.
   * @param  file: pointer to the source file name
   * @param  line: assert_param error line source number
   * @retval None
-  */
+  ******************************************************************************
+  **/
 void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */

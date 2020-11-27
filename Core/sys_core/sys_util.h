@@ -40,16 +40,21 @@ static inline void cpu_irq_leave_critical(void)
 }
 
 
+// ###########################################################################
+// Information API
+// ###########################################################################
 void system_heap_update(uint8_t *heap_end);
 void system_info_heap(void);
 void system_info_linker(void);
 void system_nvic_priority_dump(void);
+void system_info_summary(void);
 
 // ###########################################################################
 // Testing/Verification API
 // ###########################################################################
-
 void mallocTest(void);
+void system_bringup_test(void);
+void system_math_test(void);
 
 
 #endif /* _SYS_UTIL_H_ */

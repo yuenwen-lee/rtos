@@ -8,8 +8,13 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <malloc.h>
+#include <math.h>
+
 #include "main.h"
 #include "kernel/task_ctx.h"
+#include "sys_core/sys_timer.h"
+#include "utility/bench.h"
+#include "examples/func_example.h"
 #include "sys_util.h"
 
 
@@ -24,6 +29,10 @@ void system_heap_update(uint8_t *heap_end)
 //  _sbark_end = heap_end;
 }
 
+
+// ###########################################################################
+// Information API
+// ###########################################################################
 
 void system_info_heap(void)
 {
@@ -104,6 +113,15 @@ void system_nvic_priority_dump(void)
 }
 
 
+void system_info_summary(void)
+{
+    printf("CPU Hz: %lu\r\n", cpu_ticks_per_sec);
+    system_info_linker();
+    system_info_heap();
+    system_nvic_priority_dump();
+}
+
+
 // ###########################################################################
 // Testing/Verification API
 // ###########################################################################
@@ -124,4 +142,58 @@ void mallocTest(void)
     ptr = malloc(size);
     printf("Allocate memory: %p, size: 0x%08lx\r\n", ptr, size);
     system_info_heap();
+}
+
+
+void system_bringup_test(void)
+{
+    printf("\r\n\r\n\r\n");
+
+    printf("sysClcokFreq: %lu\r\n", cpu_ticks_per_sec);
+
+    volatile uint32_t count_A = sys_timer_get_inline();
+    volatile uint32_t count_B = sys_timer_get_inline();
+    printf("timer diff: %lu\r\n", (count_B - count_A));
+
+    volatile uint32_t count;
+    count = sys_timer_get_inline();
+    printf("timer counter: %lu\r\n", count);
+    count = sys_timer_get_inline();
+    printf("timer counter: %lu\r\n", count);
+
+    bench_speed();
+
+    mallocTest();
+}
+
+
+void system_math_test(void)
+{
+	volatile float v0, v1, v2;
+	volatile uint32_t t_beg, t_end, t_dlt;
+
+	v0 = (3.141592653f / 3.0f);
+
+    t_beg = sys_timer_get_inline();
+	v1 = sinf(v0);
+	v2 = asinf(v1);
+	t_end = sys_timer_get_inline();
+	t_dlt = t_end - t_beg;
+	printf("val %f, sinf() %f, asinf() %f (%e)\r\n", v0, v1, v2, (v2 - v0));
+	printf("t_beg %lu, t_end %lu t_diff %lu\r\n", t_beg, t_end, t_dlt);
+
+    t_beg = sys_timer_get_inline();
+	v1 = tanf(v0);
+	v2 = atanf(v1);
+	t_end = sys_timer_get_inline();
+	t_dlt = t_end - t_beg;
+	printf("val %f, tanf() %f, atanf() %f (%e)\r\n", v0, v1, v2, (v2 - v0));
+	printf("t_beg %lu, t_end %lu t_diff %lu\r\n", t_beg, t_end, t_dlt);
+
+    uint32_t n;
+    v1 = v0;
+    for (n = 0; n < 900; ++n) {
+        v1 = api_sinf(v1);
+    }
+	printf("val %f, api_sinf %f (diff %e)\r\n", v0, v1, (v0 - v1));
 }

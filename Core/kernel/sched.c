@@ -29,14 +29,15 @@ uint32_t t_bench_schd_min = (uint32_t) -1;   // 237
 #endif // BENCHMARK_SCHED
 
 
-int scheduler_core(void)
+uint32_t scheduler_core(uint32_t exc_turn)
 {
 	// NOTE: API is called by PendSV_Handler (task_ctx.S) and is encapsulated by cpsid/cpsie
 
 	task_fifo_t  *task_fifo_next_p;
 	task_info_t  *task_info_next_p;
 	task_info_t  *task_info_p;
-	int ctx_flag = 0;
+	uint32_t ctx_flag = 0;
+    
 #if BENCHMARK_SCHED
 	volatile uint32_t  t_samp, t_diff;
 #endif // BENCHMARK_SCHED
@@ -77,10 +78,14 @@ int scheduler_core(void)
 	// remove the candidate task from ready tree
 	(void) task_deque_from_task_fifo(task_fifo_next_p);
 	task_info_next_p->state = TASK_STATE_RUN;
-	ctx_flag = 1;
+    ctx_flag = 1;
 
 SCHEDULER_EXIT:
 	if (ctx_flag) {
+        uint32_t both_exc_b4;
+        task_info_p->exc_rtn_b4 = get_exc_return_b4(exc_turn);
+        both_exc_b4 = ((task_info_p->exc_rtn_b4) << 1) | task_info_next_p->exc_rtn_b4;
+        ctx_flag |= both_exc_b4 << 16;
 		task_switch(task_info_next_p);
 	}
 	run_stat_sched.run_counter++;

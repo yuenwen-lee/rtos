@@ -58,6 +58,7 @@ typedef struct task_info_ {
 	uint32_t      stack_base;
 	uint16_t      stack_size;
 	uint16_t      stack_usage;
+    uint32_t      exc_rtn_b4;   // EXC_RETURN[4]
 	uint32_t     *sp;
 	run_stat_t    run_stat;
 } task_info_t __attribute__((aligned(4)));

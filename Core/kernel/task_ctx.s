@@ -74,16 +74,30 @@ PendSV_Handler:
     cpsid   I                       @ Disable core int
 
     push    {lr}                    @ save the LR
+    mov     r0, lr                  @ pass lr to schduler
     bl      scheduler_core          @ jump to the scheduler_core
     pop     {lr}                    @ restore the LR
+    lsr     r3, r0, #16             @ get the 'both_exc_b4' by right shifting 16 bits
+    lsl     r0, #31
+
     cmp     r0, #0                  @ check the retrun flag from scheduler_core
-    beq     PendSV_Handler_EXIT     @ return if return flag is 0
+    beq     PendSV_Handler_No_CTX   @ return if return flag is 0
 
     ldr     r1, =task_sp_ptr_now    @ r1 = &task_sp_ptr_now
     ldr     r2, =task_sp_ptr_next   @ r2 = &task_sp_ptr_next
     ldr     r1, [r1, #0]            @ r1 = task_sp_ptr_now
     ldr     r2, [r2, #0]            @ r2 = task_sp_ptr_next
 
+    cmp     r3, #0
+    beq     PendSV_Handler_00       @ Jump to Wt_F -> Wt_F
+    cmp     r3, #1
+    beq     PendSV_Handler_01       @ Jump to Wt_F -> No_F
+    cmp     r3, #2
+    beq     PendSV_Handler_10       @ Jump to No_F -> Wt_F
+    cmp     r3, #3
+    beq     PendSV_Handler_11       @ Jump to No_F -> No_F
+
+PendSV_Handler_00:                  @ Wt_F -> Wt_F
     mov     r0, sp                  @ r0 = sp
     stmdb   r0!, {r4-r11}           @ push r4~r11
     vstmdb  r0!, {s16-s31}          @ push s16_s31
@@ -95,8 +109,56 @@ PendSV_Handler:
     mov     sp, r0                  @ swap the sp
 
 @   orr     lr, lr, #0x04           @ Force to new process PSP
+    cpsie   I                       @ enable core int
+    bx      lr
 
-PendSV_Handler_EXIT:
+PendSV_Handler_01:                  @ Wt_F -> No_F
+    mov     r0, sp                  @ r0 = sp
+    stmdb   r0!, {r4-r11}           @ push r4~r11
+    vstmdb  r0!, {s16-s31}          @ push s16_s31
+    str     r0, [r1, #0]            @ *task_sp_ptr_now = r0 (sp)
+
+    and     r0, #0                  @ r0 = 0
+    vmsr    fpscr, r0               @ clear the FPSCR
+    
+    ldr     r0, [r2, #0]            @ r0 = task_sp_ptr_next
+    ldmia   r0!, {r4-r11}           @ pop r4~r11
+    mov     sp, r0                  @ swap the sp
+
+    orr     lr, lr, #0x10           @ EXC_RETURN[4] = 1 --> Thread does NOT use floating unit
+    cpsie   I                       @ enable core int
+    bx      lr
+
+PendSV_Handler_10:                  @ No_F -> Wt_F
+    mov     r0, sp                  @ r0 = sp
+    stmdb   r0!, {r4-r11}           @ push r4~r11
+    str     r0, [r1, #0]            @ *task_sp_ptr_now = r0 (sp)
+
+    ldr     r0, [r2, #0]            @ r0 = task_sp_ptr_next
+    vldmia  r0!, {s16-s31}          @ pop s16~s31
+    ldmia   r0!, {r4-r11}           @ pop r4~r11
+    mov     sp, r0                  @ swap the sp
+
+    mov     r3, #0xFFEF
+    movt    r3, #0xFFFF             @ set r3 = 0xFFFFFFEF (BIT4 = 0)
+    and     lr, lr, r3              @ EXC_RETURN[4] = 0 --> Thread use floating unit
+    cpsie   I                       @ enable core int
+    bx      lr
+
+PendSV_Handler_11:                  @ No_F -> No_F
+    mov     r0, sp                  @ r0 = sp
+    stmdb   r0!, {r4-r11}           @ push r4~r11
+    str     r0, [r1, #0]            @ *task_sp_ptr_now = r0 (sp)
+
+    ldr     r0, [r2, #0]            @ r0 = task_sp_ptr_next
+    ldmia   r0!, {r4-r11}           @ pop r4~r11
+    mov     sp, r0                  @ swap the sp
+
+@   orr     lr, lr, #0x04           @ Force to new process PSP
+    cpsie   I                       @ enable core int
+    bx      lr
+
+PendSV_Handler_No_CTX:
     cpsie   I                       @ enable core int
     bx      lr
     .size   PendSV_Handler, .-PendSV_Handler

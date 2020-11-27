@@ -165,6 +165,20 @@ void task_stack_init(uint32_t *sp, void *func_ptr, uint32_t argv)
 }
 
 
+void task_stack_init_no_float(uint32_t *sp, void *func_ptr, uint32_t argv)
+{
+    uint32_t *ptr = sp;
+    for (int n = 0; n < STACK_SIZE_BASIC_FRAME; ++n) {
+        ptr[n] = 0; 
+    }
+
+	sp[ 8] = argv;                           // r0
+	sp[13] = 0x01000000L;                    // r14 (lr)
+	sp[14] = ((unsigned int) func_ptr) | 1;  // pc
+	sp[15] = 0x01000000L;                    // xPSR
+}
+
+
 void task_sys_init(uint32_t stack_size)
 {
 	uint32_t       task_id;
@@ -256,6 +270,7 @@ uint32_t task_create(void *func_ptr, const char *name, uint32_t priority, uint32
 
 	task_info_p = &task_info_pool[task_id];
 	task_info_p->priority   = priority;
+    task_info_p->exc_rtn_b4 = 1;
 	task_info_p->name       = name;
 	task_info_p->stack_base = task_stack_base(stack_size);
 	task_info_p->stack_size = stack_size;
@@ -267,7 +282,8 @@ uint32_t task_create(void *func_ptr, const char *name, uint32_t priority, uint32
 
 	// fill the stack with magic pattern
 	task_stack_fill_magic(task_info_p->stack_base, task_info_p->stack_size);
-	task_stack_init(task_info_p->sp, func_ptr, (uint32_t) arg);
+//	task_stack_init(task_info_p->sp, func_ptr, (uint32_t) arg);
+    task_stack_init_no_float(task_info_p->sp, func_ptr, (uint32_t) arg);
 //	task_stack_init_debug(task_info_p->sp, func_ptr, (uint32_t) arg, task_id);
 
 	cpu_irq_enter_critical();    // __disable_irq();
@@ -626,12 +642,13 @@ void task_info_dump (task_info_t *task_p, int event)
 	printf("  que_next  : %p\r\n", task_p->que_task_info.next);
 	printf("  id        : %d\r\n", task_p->id);
 	printf("  name      : %s\r\n", task_p->name);
-	printf("  prior     : %d\r\n", task_p->priority);
+	printf("  priority  : %d\r\n", task_p->priority);
 	printf("  state     : %s\r\n", task_state_name[task_p->state]);
 	printf("  t_wakeup  : %lu\r\n", task_p->wake_up_time);
 	printf("  stack_base: %p\r\n", (void *) task_p->stack_base);
 	printf("  stack_size: %d\r\n", task_p->stack_size);
 	printf("  stack_ptr : %p\r\n", (void *) task_p->sp);
+	printf("  exc_rtn_b4: %lu\r\n", task_p->exc_rtn_b4);
 	printf("  run_t_redy: %llu\r\n", task_p->run_stat.time_ready);
 	printf("  run_t_ttl : %llu\r\n", task_p->run_stat.time_ttl);
 	printf("  run_count : %lu\r\n", task_p->run_stat.run_counter);

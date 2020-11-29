@@ -1,8 +1,8 @@
 /*
  * sys_timer.c
  * 
- * Created: 10/16/2020 4:46:40 PM
- *  Author: yuenw
+ *  Created on: Sep 6, 2013
+ *      Author: Y.W. Lee
  */
 
 #include <stdint.h>

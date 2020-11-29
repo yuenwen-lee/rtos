@@ -1,8 +1,8 @@
 /*
- * sys_tick.c
+ * sys_ticks.c
  * 
- * Created: 10/13/2020 2:47:49 PM
- *  Author: yuenw
+ *  Created on: Aug 10, 2013
+ *      Author: Y.W. Lee
  */
 
 #include <stdio.h>

@@ -1,8 +1,8 @@
 /*
  * sys_util.c
  *
- * Created: 10/13/2020 4:29:28 PM
- *  Author: yuenw
+ *  Created on: Oct 13, 2020
+ *  Author: Y.W. Lee
  */
 
 #include <stdint.h>
@@ -169,31 +169,31 @@ void system_bringup_test(void)
 
 void system_math_test(void)
 {
-	volatile float v0, v1, v2;
-	volatile uint32_t t_beg, t_end, t_dlt;
+    volatile float v0, v1, v2;
+    volatile uint32_t t_beg, t_end, t_dlt;
 
-	v0 = (3.141592653f / 3.0f);
-
-    t_beg = sys_timer_get_inline();
-	v1 = sinf(v0);
-	v2 = asinf(v1);
-	t_end = sys_timer_get_inline();
-	t_dlt = t_end - t_beg;
-	printf("val %f, sinf() %f, asinf() %f (%e)\r\n", v0, v1, v2, (v2 - v0));
-	printf("t_beg %lu, t_end %lu t_diff %lu\r\n", t_beg, t_end, t_dlt);
+    v0 = (3.141592653f / 3.0f);
 
     t_beg = sys_timer_get_inline();
-	v1 = tanf(v0);
-	v2 = atanf(v1);
-	t_end = sys_timer_get_inline();
-	t_dlt = t_end - t_beg;
-	printf("val %f, tanf() %f, atanf() %f (%e)\r\n", v0, v1, v2, (v2 - v0));
-	printf("t_beg %lu, t_end %lu t_diff %lu\r\n", t_beg, t_end, t_dlt);
+    v1 = sinf(v0);
+    v2 = asinf(v1);
+    t_end = sys_timer_get_inline();
+    t_dlt = t_end - t_beg;
+    printf("val %f, sinf() %f, asinf() %f (%e)\r\n", v0, v1, v2, (v2 - v0));
+    printf("t_beg %lu, t_end %lu t_diff %lu\r\n", t_beg, t_end, t_dlt);
+
+    t_beg = sys_timer_get_inline();
+    v1 = tanf(v0);
+    v2 = atanf(v1);
+    t_end = sys_timer_get_inline();
+    t_dlt = t_end - t_beg;
+    printf("val %f, tanf() %f, atanf() %f (%e)\r\n", v0, v1, v2, (v2 - v0));
+    printf("t_beg %lu, t_end %lu t_diff %lu\r\n", t_beg, t_end, t_dlt);
 
     uint32_t n;
     v1 = v0;
     for (n = 0; n < 900; ++n) {
         v1 = api_sinf(v1);
     }
-	printf("val %f, api_sinf %f (diff %e)\r\n", v0, v1, (v0 - v1));
+    printf("val %f, api_sinf %f (diff %e)\r\n", v0, v1, (v0 - v1));
 }

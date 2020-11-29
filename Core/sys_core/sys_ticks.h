@@ -2,11 +2,11 @@
  * sys_ticks.h
  *
  *  Created on: Aug 10, 2013
- *      Author: wayne
+ *      Author: Y.W. Lee
  */
 
-#ifndef _SYSTICK_HANDLER_H_
-#define _SYSTICK_HANDLER_H_
+#ifndef _SYS_TICKS_H_
+#define _SYS_TICKS_H_
 
 
 #include <stdbool.h>
@@ -73,4 +73,4 @@ void sysTimerTest(void);
 void sysTickTest(void);
 
 
-#endif /* _SYSTICK_HANDLER_H_ */
+#endif /* _SYS_TICKS_H_ */

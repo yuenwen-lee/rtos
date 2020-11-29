@@ -1,8 +1,8 @@
 /*
  * sys_util.h
  *
- * Created: 10/17/2020 12:01:15 PM
- *  Author: yuenw
+ *  Created on: Oct 17, 2020
+ *      Author: Y.W. Lee
  */
 
 #ifndef _SYS_UTIL_H_

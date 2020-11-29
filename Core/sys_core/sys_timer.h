@@ -2,7 +2,7 @@
  * sys_timer.h
  *
  *  Created on: Sep 6, 2013
- *      Author: wayne
+ *      Author: Y.W. Lee
  */
 
 #ifndef _SYS_TIMER_H_

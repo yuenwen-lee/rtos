@@ -2,7 +2,7 @@
  * cli_util.c
  *
  * Created on: Dec 11, 2018
- *     Author: ywlee
+ *     Author: Y.W. Lee
  */ 
 
 #include <stdbool.h>
@@ -605,39 +605,39 @@ static cmd_info_t cli_cmd_info;
 
 uint32_t cli_task(void *arg)
 {
-	char     *buf_p;
-	uint32_t  buf_len;
-	int rt;
+    char     *buf_p;
+    uint32_t  buf_len;
+    int rt;
 
-	uart_handler_init();  // Setup the UART_Handler() ISR for UART
+    uart_handler_init();  // Setup the UART_Handler() ISR for UART
 
-	cli_mng_init();
-	cli_cmd_info.arg_list_size = ARG_LEN;
+    cli_mng_init();
+    cli_cmd_info.arg_list_size = ARG_LEN;
 
     cli_mem_init();   // cli for mem checking
 
-	while (1) {
+    while (1) {
 
-		ring_buf_event_wait(&uart_buf_event, &buf_p, &buf_len);
-		if (buf_len == 0) {
-			continue;
-		}
+        ring_buf_event_wait(&uart_buf_event, &buf_p, &buf_len);
+        if (buf_len == 0) {
+            continue;
+        }
         board_blink_led_cli();
 
-		cli_cmd_info.cmd_buf = buf_p;
-		cli_cmd_info.cmd_len = buf_len;
+        cli_cmd_info.cmd_buf = buf_p;
+        cli_cmd_info.cmd_len = buf_len;
 
-		rt = cmd_segment(&cli_cmd_info);
-		if (rt < 0) {
-			printf("Error, too many arguments ...\r\n");
-			continue;
-		}
-		cli_info_parser(&cli_cmd_info);
+        rt = cmd_segment(&cli_cmd_info);
+        if (rt < 0) {
+            printf("Error, too many arguments ...\r\n");
+            continue;
+        }
+        cli_info_parser(&cli_cmd_info);
 
-		ring_buf_event_seg_free(&uart_buf_event);
-	}
+        ring_buf_event_seg_free(&uart_buf_event);
+    }
 
-	return 0;
+    return 0;
 }
 
 
@@ -746,7 +746,7 @@ static int cli_cb_dump(cmd_info_t *cmd_info)
         if (cli->node_head) {
             cli = cli->node_head;
         } else {
-        	stop_at_leaf = 1;
+            stop_at_leaf = 1;
             break;
         }
     }
@@ -755,9 +755,9 @@ static int cli_cb_dump(cmd_info_t *cmd_info)
     if (mode == 0) {
         cli_info_dump_sub_tree(cli);
     } else {
-    	if (stop_at_leaf == 0) {
-    		cli = cli->prev;
-    	}
+        if (stop_at_leaf == 0) {
+            cli = cli->prev;
+        }
         cli_info_cmd_path_dump(cli, "");
         printf("\r\n");
         cli_info_dump(cli, "");
@@ -1070,13 +1070,13 @@ static cli_info_t cli_mem_root_dump;
 void cli_mem_init(void)
 {
     cli_info_init_node(&cli_mem_root, "mem", "mem dump/modify");
-	cli_info_attach_root(&cli_mem_root);
+    cli_info_attach_root(&cli_mem_root);
 
-	cli_info_init_leaf(&cli_mem_root_map, "map", "show the memory map",
-	                   cli_cb_mem_root_map);
-	cli_info_attach_node(&cli_mem_root, &cli_mem_root_map);
+    cli_info_init_leaf(&cli_mem_root_map, "map", "show the memory map",
+                       cli_cb_mem_root_map);
+    cli_info_attach_node(&cli_mem_root, &cli_mem_root_map);
 
-	cli_info_init_leaf(&cli_mem_root_dump, "dump", "dump memory region",
-	                   cli_cb_mem_root_dump);
-	cli_info_attach_node(&cli_mem_root, &cli_mem_root_dump);
+    cli_info_init_leaf(&cli_mem_root_dump, "dump", "dump memory region",
+                       cli_cb_mem_root_dump);
+    cli_info_attach_node(&cli_mem_root, &cli_mem_root_dump);
 }

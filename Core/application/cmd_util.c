@@ -2,7 +2,7 @@
  * cmd_util.c
  *
  * Created on: Dec 11, 2018
- *     Author: ywlee
+ *     Author: Y.W. Lee
  */ 
 
 #include <application/cmd_util.h>

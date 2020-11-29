@@ -2,7 +2,7 @@
  * cmd_util.h
  *
  * Created on: Dec 11, 2018
- *     Author: ywlee
+ *     Author: Y.W. Lee
  */ 
 
 #ifndef _CMD_UTIL_H_

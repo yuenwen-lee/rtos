@@ -2,7 +2,7 @@
  * cli_util.h
  *
  * Created on: Dec 11, 2018
- *     Author: ywlee
+ *     Author: Y.W. Lee
  */ 
 
 #ifndef _CLI_UTIL_H_
@@ -40,17 +40,17 @@
 typedef int (*cli_func_t)(cmd_info_t *cmd_info);
 
 typedef struct cli_info_ {
-	const char       *cmnd;
-	const char       *help;
-	uint8_t           type;       // 0 -> uknow, 1 -> node, 2 -> leaf
-	uint8_t           cnfg_err;   // configuration error
-	uint8_t           state;      // walk through state                    (X)
-	uint8_t           level;      // command level
-	cli_func_t        cli_cb;     // call-back func, if cli_cb == NULL, this is a node
-	struct cli_info_ *node_head;  // the head of sub-level cli_info_t
-	struct cli_info_ *next;       // next cli_info_t in this level
-	struct cli_info_ *prev;       // previous cli_info_t in this level
-	struct cli_info_ *chain;      // for construct one thread link list    (X)
+    const char       *cmnd;
+    const char       *help;
+    uint8_t           type;       // 0 -> uknow, 1 -> node, 2 -> leaf
+    uint8_t           cnfg_err;   // configuration error
+    uint8_t           state;      // walk through state                    (X)
+    uint8_t           level;      // command level
+    cli_func_t        cli_cb;     // call-back func, if cli_cb == NULL, this is a node
+    struct cli_info_ *node_head;  // the head of sub-level cli_info_t
+    struct cli_info_ *next;       // next cli_info_t in this level
+    struct cli_info_ *prev;       // previous cli_info_t in this level
+    struct cli_info_ *chain;      // for construct one thread link list    (X)
 } cli_info_t;
 
 

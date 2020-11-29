@@ -1,8 +1,8 @@
 /*
- * dummy_task.c
+ * task_example_dummy.c
  *
- * Created: 10/22/2020 5:28:37 PM
- *  Author: yuenw
+ * Created on: Unknown ...
+ *     Author: Y.W. Lee
  */ 
 
 #include <stdint.h>
@@ -15,16 +15,16 @@ volatile uint32_t counter_AA;
 
 uint32_t task_dummy_AA(void *argv)
 {
-	counter_AA++;
-	while (1) {
-		counter_AA++;
-	}
+    counter_AA++;
+    while (1) {
+        counter_AA++;
+    }
 
-	return 0;
+    return 0;
 }
 
 
 void task_dummy_AA_dump(void)
 {
-	printf("    Task_dummy_AA_dump(): %lu\r\n", counter_AA);
+    printf("    Task_dummy_AA_dump(): %lu\r\n", counter_AA);
 }

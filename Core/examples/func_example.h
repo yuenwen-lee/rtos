@@ -2,7 +2,7 @@
  * some simple func_call ...
  *
  *  Created on: Jul 16, 2013
- *      Author: wayne
+ *      Author: Y.W. Lee
  */
 
 #ifndef _FUNC_EXAMPLE_H_

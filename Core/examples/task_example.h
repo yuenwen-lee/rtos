@@ -1,8 +1,8 @@
 /*
  * task_examples.h
  *
- * Created: 10/22/2020 5:27:58 PM
- *  Author: yuenw
+ * Created on: Sep 15, 2018
+ *     Author: Y.W. Lee
  */ 
 
 #ifndef _TASK_EXAMPLES_H_
@@ -22,11 +22,11 @@ void task_dummy_AA_dump(void);
 #define TASK_TIMER_NUM    20
 
 typedef struct task_timer_stat_ {
-	uint32_t used;
-	uint32_t wake_num;
-	uint32_t wake_count;
-	uint32_t wake_count_prev;
-	uint32_t wake_count_dlt;
+    uint32_t used;
+    uint32_t wake_num;
+    uint32_t wake_count;
+    uint32_t wake_count_prev;
+    uint32_t wake_count_dlt;
     uint32_t overdue;
     uint32_t overdue_prev;
     uint32_t overdue_delt;
@@ -34,8 +34,8 @@ typedef struct task_timer_stat_ {
 } task_timer_stat_t;
 
 typedef struct task_timer_cnfg_ {
-	uint32_t id;       // id
-	uint32_t period;   // in msec
+    uint32_t id;       // id
+    uint32_t period;   // in msec
 } task_timer_cnfg_t;
 
 

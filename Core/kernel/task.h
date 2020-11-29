@@ -2,7 +2,7 @@
  * task.h
  *
  *  Created on: Jul 16, 2013
- *      Author: wayne
+ *      Author: Y.W. Lee
  */
 
 #ifndef _TASK_H_
@@ -37,46 +37,46 @@ extern uint32_t _estack;
 
 
 typedef enum task_state_ {
-	TASK_STATE_UNUSED = 0,
-	TASK_STATE_TAKEN,
-	TASK_STATE_RUN,
-	TASK_STATE_READY,
-	TASK_STATE_WAIT_SEM,
-	TASK_STATE_WAIT_MUTEX,
-	TASK_STATE_WAIT_SLEEP,
-	TASK_STATE_SUSPEND,
-	TASK_STATE_N
+    TASK_STATE_UNUSED = 0,
+    TASK_STATE_TAKEN,
+    TASK_STATE_RUN,
+    TASK_STATE_READY,
+    TASK_STATE_WAIT_SEM,
+    TASK_STATE_WAIT_MUTEX,
+    TASK_STATE_WAIT_SLEEP,
+    TASK_STATE_SUSPEND,
+    TASK_STATE_N
 } task_state_t;
 
 typedef struct task_info_ {
-	que_t         que_task_info;
-	uint16_t      id;
-	uint16_t      priority;
-	const char   *name;
-	task_state_t  state;
-	uint32_t      wake_up_time;
-	uint32_t      stack_base;
-	uint16_t      stack_size;
-	uint16_t      stack_usage;
+    que_t         que_task_info;
+    uint16_t      id;
+    uint16_t      priority;
+    const char   *name;
+    task_state_t  state;
+    uint32_t      wake_up_time;
+    uint32_t      stack_base;
+    uint16_t      stack_size;
+    uint16_t      stack_usage;
     uint32_t      exc_rtn_b4;   // EXC_RETURN[4]
-	uint32_t     *sp;
-	run_stat_t    run_stat;
+    uint32_t     *sp;
+    run_stat_t    run_stat;
 } task_info_t __attribute__((aligned(4)));
 
 typedef struct task_fifo_ {
-	que_t         que_head_task_info;   // queue head for linking task_info_t
-	uint16_t      task_numb;
-	uint16_t      priority;
+    que_t         que_head_task_info;   // queue head for linking task_info_t
+    uint16_t      task_numb;
+    uint16_t      priority;
 } task_fifo_t __attribute__((aligned(4)));
 
 typedef struct pri_act_map_ {
-	uint32_t      act_b_map;
-	uint32_t      act_pri_num;
+    uint32_t      act_b_map;
+    uint32_t      act_pri_num;
 } pri_act_map_t;
 
 typedef struct ready_tree_ {
-	pri_act_map_t pri_act_map;
-	task_fifo_t   task_fifo[TASK_FIFO_NUMB];
+    pri_act_map_t pri_act_map;
+    task_fifo_t   task_fifo[TASK_FIFO_NUMB];
 } ready_que_t;
 
 

@@ -2,11 +2,11 @@
  * task_util.h
  *
  *  Created on: Aug 21, 2013
- *      Author: wayne
+ *      Author: Y.W. Lee
  */
 
-#ifndef TASK_UTIL_H_
-#define TASK_UTIL_H_
+#ifndef _TASK_UTIL_H_
+#define _TASK_UTIL_H_
 
 
 #include "kernel/task.h"
@@ -26,8 +26,8 @@ char *string_fill_buf(char* buf, uint32_t buf_len, const char *string);
 
 static inline uint32_t task_self_id(void)
 {
-	return task_id_run;
+    return task_id_run;
 }
 
 
-#endif /* TASK_UTIL_H_ */
+#endif /* _TASK_UTIL_H_ */

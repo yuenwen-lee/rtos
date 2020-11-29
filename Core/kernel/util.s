@@ -1,8 +1,8 @@
 /*
  * util.s
  *
- * Created: 11/20/2020 12:08:14 PM
- *  Author: Wayne Lee
+ *  Created on: Nov 20, 2020
+ *      Author: Y.W. Lee
  */
 
     .syntax unified

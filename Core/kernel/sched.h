@@ -2,7 +2,7 @@
  * schd.h
  *
  *  Created on: Aug 10, 2013
- *      Author: wayne
+ *      Author: Y.W. Lee
  */
 
 #ifndef _SCHED_H_

@@ -1,12 +1,12 @@
 /*
- * run_time_util.h
+ * run_stat.h
  *
  *  Created on: Feb 4, 2017
- *      Author: wayne
+ *      Author: Y.W. Lee
  */
 
-#ifndef _SRC_KERNEL_RUN_STAT_H_
-#define _SRC_KERNEL_RUN_STAT_H_
+#ifndef _RUN_STAT_H_
+#define _RUN_STAT_H_
 
 #include <stdint.h>
 #include "kernel/que.h"
@@ -16,27 +16,27 @@
 
 
 typedef struct run_time_tag_s {
-	uint32_t  t_stamp;
-	uint32_t  t_accum;
+    uint32_t  t_stamp;
+    uint32_t  t_accum;
 } run_time_stack_t;
 
 typedef struct run_stat_s {
-	uint64_t  time_ready;      // last time when task state changes to "TASK_STATE_RUN"
-	uint64_t  time_ttl;        // total run time (CPU cycles)
-	uint32_t  run_counter;     // task -> in TASK_STATE_RUN, ISR -> number called
+    uint64_t  time_ready;      // last time when task state changes to "TASK_STATE_RUN"
+    uint64_t  time_ttl;        // total run time (CPU cycles)
+    uint32_t  run_counter;     // task -> in TASK_STATE_RUN, ISR -> number called
 } run_stat_t;
 
 typedef struct run_stat_que_s {
-	que_t        link;
-	uint32_t     id;
-	const char  *name;
-	run_stat_t  *stat_p;
-	uint64_t     time_ttl_prev;   // total run time last snapshot
-	uint32_t     time_dlt;
-	uint32_t     time_avg;        // average run time
-	uint32_t     run_counter_prev;
-	uint32_t     run_counter_dlt;
-	uint32_t     cpu_load;
+    que_t        link;
+    uint32_t     id;
+    const char  *name;
+    run_stat_t  *stat_p;
+    uint64_t     time_ttl_prev;   // total run time last snapshot
+    uint32_t     time_dlt;
+    uint32_t     time_avg;        // average run time
+    uint32_t     run_counter_prev;
+    uint32_t     run_counter_dlt;
+    uint32_t     cpu_load;
 } run_stat_que_t __attribute__((aligned(4)));
 
 
@@ -73,9 +73,9 @@ void cli_run_stat_init(void);
 
 static inline void cli_cb_run_stat_root_load_stop(void)
 {
-	/* stop displaying task/isr cpu load in display task */
-	cli_run_stat_root_load_display_enable = 0;
+    /* stop displaying task/isr cpu load in display task */
+    cli_run_stat_root_load_display_enable = 0;
 }
 
 
-#endif /* _SRC_KERNEL_RUN_STAT_H_ */
+#endif /* _RUN_STAT_H_ */

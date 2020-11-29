@@ -1,8 +1,8 @@
 /*
  * ring_buf_event.h
  *
- *  Created by Wayne Lee on 1/4/17.
- *  Copyright © 2017 Wayne Lee. All rights reserved.
+ *  Created on: Jan 4, 2017
+ *      Author: Y.W Lee
  */ 
 
 #ifndef _RING_BUF_EVENT_H_
@@ -43,7 +43,6 @@ void ring_buf_event_dump(ring_buf_event_t *event_p);
 void ring_buf_event_buf_dump(ring_buf_event_t *event_p);
 
 
-
 static inline uint32_t ring_buf_event_seg_data_left(ring_buf_event_t *event_p)
 {
     return ((uint32_t) event_p->seg_data_left);
@@ -51,12 +50,12 @@ static inline uint32_t ring_buf_event_seg_data_left(ring_buf_event_t *event_p)
 
 static inline uint32_t ring_buf_event_seg_data_full(ring_buf_event_t *event_p)
 {
-	return (event_p->seg_data_left == 0);
+    return (event_p->seg_data_left == 0);
 }
 
 static inline uint32_t ring_buf_event_seg_data_empty(ring_buf_event_t *event_p)
 {
-	return (event_p->seg_data_left == event_p->seg_data_len);
+    return (event_p->seg_data_left == event_p->seg_data_len);
 }
 
 static inline uint32_t ring_buf_event_write_char(ring_buf_event_t *event_p, char c)
@@ -68,8 +67,8 @@ static inline uint32_t ring_buf_event_write_char(ring_buf_event_t *event_p, char
 
 static inline uint32_t ring_buf_event_clear_char(ring_buf_event_t *event_p)
 {
-	event_p->buf_seg_p--;
-	event_p->seg_data_left++;
+    event_p->buf_seg_p--;
+    event_p->seg_data_left++;
     return ((uint32_t) event_p->seg_data_left);
 }
 

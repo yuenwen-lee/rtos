@@ -1,8 +1,8 @@
 /*
  * ring_buf_event.c
  *
- * Created by Wayne Lee on 1/4/17.
- * Copyright © 2017 Wayne Lee. All rights reserved.
+ *  Created on: Jan 4, 2017
+ *      Author: Y.W Lee
  */ 
 
 #include <stdio.h>
@@ -62,7 +62,7 @@ void *ring_buf_event_seg_get(ring_buf_event_t *event_p, uint32_t len_req)
 
     len_seg = len_req + sizeof(ring_buf_seg_t);
     if (len_seg > DRV_BUF_SEG_MAX) {
-    	return NULL;
+        return NULL;
     }
 
     offset_wr = event_p->offset_wr;
@@ -70,7 +70,7 @@ void *ring_buf_event_seg_get(ring_buf_event_t *event_p, uint32_t len_req)
 
     if (offset_wr >= offset_rd) {
         if (offset_wr == offset_rd &&
-        	event_p->event_ack != event_p->event_send) {
+            event_p->event_ack != event_p->event_send) {
             event_p->err_ovflow++;
             return NULL;
         }

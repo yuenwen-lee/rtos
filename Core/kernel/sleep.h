@@ -2,7 +2,7 @@
  * sleep.h
  *
  *  Created on: Aug 27, 2013
- *      Author: wayne
+ *      Author: Y.W. Lee
  */
 
 #ifndef _SLEEP_H_
@@ -13,9 +13,9 @@
 
 
 typedef struct sleep_que_ {
-	uint32_t   latest_wake_up_time;
-	que_t      que_head_task_info;
-	uint32_t   numb;
+    uint32_t   latest_wake_up_time;
+    que_t      que_head_task_info;
+    uint32_t   numb;
 } sleep_que_t __attribute__((aligned(4)));
 
 

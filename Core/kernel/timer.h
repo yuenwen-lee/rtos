@@ -2,7 +2,7 @@
  * timer.h
  *
  *  Created on: Sep 19, 2013
- *      Author: wayne
+ *      Author: Y.W. Lee
  */
 
 #ifndef _TIMER_H_
@@ -10,11 +10,11 @@
 
 
 typedef struct timer_obj_ {
-	uint32_t  task_id;
-	uint32_t  period_msec;
-	uint32_t  period_tick;
-	uint32_t  time_wakeup;   // next wake up time
-	uint64_t  count;
+    uint32_t  task_id;
+    uint32_t  period_msec;
+    uint32_t  period_tick;
+    uint32_t  time_wakeup;   // next wake up time
+    uint64_t  count;
 } timer_obj_t;
 
 

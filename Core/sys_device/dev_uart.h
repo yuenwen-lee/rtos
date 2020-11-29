@@ -1,8 +1,8 @@
 /*
- * drv_uart.h
+ * dev_uart.h
  * 
- * Created: 11/8/2020 07:45 PM
- *  Author: Wayne Lee
+ * Created on: Nov 8, 2020
+ *     Author: Y.W. Lee
  */
 
 #ifndef _DRV_UART_H_

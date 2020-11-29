@@ -1,8 +1,8 @@
 /*
- * drv_uart.c
+ * dev_uart.c
  * 
- * Created: 11/8/2020 08:01 PM
- *  Author: Wayne Lee
+ * Created on: Nov 8, 2020
+ *     Author: Y.W. Lee
  */
 
 #include <stdio.h>

@@ -1,14 +1,15 @@
 /*
- * board_ctrl.c
+ * dev_board.c
  *
- * Created: 11/2/2020 6:57:32 PM
- *  Author: yuenw
+ * Created on: Nov 11, 2020
+ *     Author: Y.W. Lee
  */
 
 #include <stdint.h>
 #include "kernel/sleep.h"
 #include "stm32f4xx/stm32f4xx_nucleo_144.h"
 #include "dev_board.h"
+
 
 void board_toggle_led_monitor(void)
 {

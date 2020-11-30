@@ -1,8 +1,8 @@
 /*
  * bench_core.S
  *
- * Created: 11/2/2020 2:32:08 PM
- *  Author: yuenw
+ * Created on: Nov 2. 2020
+ *     Author: Y.W. Lee
  */ 
 
 	.syntax unified
@@ -34,6 +34,7 @@ bench_X:
 .L21:
 	.word   500000
 	.size   bench_X, .-bench_X
+
 
 	.align  2
 	.global api_Z

@@ -46,4 +46,17 @@ void task_timer_stat_update(void);
 void task_timer_stat_display(void);
 
 
+//
+// task_example_mutex.c  .........................................
+//
+typedef struct task_mutex_stat_ {
+    uint32_t used;
+    uint32_t count_lock;
+} task_mutex_stat_t;
+
+
+uint32_t task_mutex (void *arg);
+void task_mutex_stat_display(void);
+
+
 #endif /* _TASK_EXAMPLES_H_ */

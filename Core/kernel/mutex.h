@@ -19,7 +19,7 @@ typedef struct mutex_s {
 } mutex_t;
 
 
-void mutex_reset (mutex_t *mutex_p);
+void mutex_init (mutex_t *mutex_p);
 int mutex_try_lock (mutex_t *mutex_p);
 void mutex_lock (mutex_t *mutex_p);
 void mutex_unlock (mutex_t *mutex_p);

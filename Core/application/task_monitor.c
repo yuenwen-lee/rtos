@@ -100,7 +100,8 @@ void monitor_display_task(void *arg)
             putchar('J');
             monitor_display_ctx_stat();
             run_stat_display();
-            task_timer_stat_display();
+//          task_timer_stat_display();
+//          task_mutex_stat_display();
         }
 
         if (cli_task_root_stack_check_enable) {

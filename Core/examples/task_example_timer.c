@@ -12,7 +12,6 @@
 #include "kernel/task.h"
 #include "kernel/task_util.h"
 #include "kernel/timer.h"
-#include "kernel/sem.h"
 #include "examples/func_example.h"
 #include "examples/task_example.h"
 
@@ -156,7 +155,7 @@ void task_timer_stat_display (void)
     uint32_t  n;
     const char *rst;
 
-    printf("\nTask_Example_Timer Info +++\r\n");
+    printf("Task_Example_Timer Info +++\r\n");
     for (n = 0; n < TASK_TIMER_NUM; ++n) {
         task_timer_stat_t *stat = &timer_stat[n];
         if (stat->used == 0) {

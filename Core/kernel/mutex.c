@@ -17,7 +17,7 @@
 #include "utility/bits_op_tool.h"
 
 
-void mutex_reset (mutex_t *mutex_p)
+void mutex_init (mutex_t *mutex_p)
 {
     int n;
 

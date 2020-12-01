@@ -23,6 +23,7 @@
 #include "sys_device/dev_uart.h"
 #include "kernel/task.h"
 #include "kernel/sched.h"
+#include "kernel/mutex.h"
 #include "application/task_monitor.h"
 #include "application/cmd_util.h"
 #include "application/cli_util.h"
@@ -95,6 +96,13 @@ int main(void)
     ex4.id = 3;
     ex4.period = 10;
     task_create(task_timer_tanf, "Exmp_4", PRIORITY_LOWEST + 4, TASK_STACK_SIZE_1_0K, &ex4);
+
+    mutex_t mutex_exmp;
+    mutex_init(&mutex_exmp);
+
+    task_create(task_mutex, "Mutex_1", PRIORITY_LOWEST + 5, TASK_STACK_SIZE_0_5K, &mutex_exmp);
+    task_create(task_mutex, "Mutex_2", PRIORITY_LOWEST + 5, TASK_STACK_SIZE_0_5K, &mutex_exmp);
+    task_create(task_mutex, "Mutex_3", PRIORITY_LOWEST + 5, TASK_STACK_SIZE_0_5K, &mutex_exmp);
 
     // ############################################
     // ##  Start SysTick, scheduler will run ......

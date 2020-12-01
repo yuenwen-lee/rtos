@@ -428,7 +428,7 @@ void run_stat_display(void)
         que = que->next;
         n++;
     }
-    printf("\nload: %lu.%02lu%%\r\n", sys_cpu_load/100, sys_cpu_load%100);
+    printf("\nload: %lu.%02lu%%\r\n\n", sys_cpu_load/100, sys_cpu_load%100);
 }
 
 

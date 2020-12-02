@@ -15,6 +15,7 @@
 #include "kernel/ring_buf_event.h"
 #include "sys_device/dev_uart.h"
 #include "sys_device/dev_board.h"
+#include "sys_core/sys_util.h"
 #include "cli_util.h"
 #include "cmd_util.h"
 
@@ -962,7 +963,7 @@ static int cli_cb_mem_root_dump(cmd_info_t *cmd_info)
     char mode;
 
     if (!cmd_arg_avail(cmd_info) || cmd_arg_1st_is_help(cmd_info)) {
-        printf("%s\r\n", help);
+        printf("%s", help);
         goto EXIT;
     }
 
@@ -1059,12 +1060,20 @@ static int cli_cb_mem_root_map(cmd_info_t *cmd_info)
 }
 
 
+static int cli_cb_mem_root_info(cmd_info_t *cmd_info)
+{
+    system_info_mem();
+    return 0;
+}
+
+
 // ############################################################################
 // ############################################################################
 
 static cli_info_t cli_mem_root;
 static cli_info_t cli_mem_root_map;
 static cli_info_t cli_mem_root_dump;
+static cli_info_t cli_mem_root_info;
 
 
 void cli_mem_init(void)
@@ -1079,4 +1088,8 @@ void cli_mem_init(void)
     cli_info_init_leaf(&cli_mem_root_dump, "dump", "dump memory region",
                        cli_cb_mem_root_dump);
     cli_info_attach_node(&cli_mem_root, &cli_mem_root_dump);
+
+    cli_info_init_leaf(&cli_mem_root_info, "info", "show memory usuage",
+                       cli_cb_mem_root_info);
+    cli_info_attach_node(&cli_mem_root, &cli_mem_root_info);
 }

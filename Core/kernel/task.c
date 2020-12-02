@@ -634,7 +634,15 @@ void task_switch(task_info_t *task_info_next_p)
 
 void task_info_dump (task_info_t *task_p, int event)
 {
-    printf("+++ Task Info (event %d) +++\r\n", event);
+    const char *float_stat;
+
+    if (task_p->exc_rtn_b4 == 1) {
+        float_stat = "(No_Float)";
+    } else {
+        float_stat = "(Using_Float)";
+    }
+
+    printf("Task Info\r\n");
     printf("  <self>    : %p\r\n", task_p);
     printf("  que_prev  : %p\r\n", task_p->que_task_info.prev);
     printf("  que_next  : %p\r\n", task_p->que_task_info.next);
@@ -646,7 +654,7 @@ void task_info_dump (task_info_t *task_p, int event)
     printf("  stack_base: %p\r\n", (void *) task_p->stack_base);
     printf("  stack_size: %d\r\n", task_p->stack_size);
     printf("  stack_ptr : %p\r\n", (void *) task_p->sp);
-    printf("  exc_rtn_b4: %lu\r\n", task_p->exc_rtn_b4);
+    printf("  exc_rtn_b4: %lu %s\r\n", task_p->exc_rtn_b4, float_stat);
     printf("  run_t_redy: %llu\r\n", task_p->run_stat.time_ready);
     printf("  run_t_ttl : %llu\r\n", task_p->run_stat.time_ttl);
     printf("  run_count : %lu\r\n", task_p->run_stat.run_counter);

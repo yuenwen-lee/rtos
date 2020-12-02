@@ -80,6 +80,8 @@ typedef struct ready_tree_ {
 } ready_que_t;
 
 
+extern uint32_t      task_next_stack_start;
+
 extern task_fifo_t   task_fifo_pool[];
 extern task_info_t   task_info_pool[];
 

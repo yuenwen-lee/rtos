@@ -11,6 +11,7 @@
 #include <math.h>
 
 #include "main.h"
+#include "kernel/task.h"
 #include "kernel/task_ctx.h"
 #include "sys_core/sys_timer.h"
 #include "utility/bench.h"
@@ -63,39 +64,56 @@ extern uint32_t _sbss;     // start address for the .bss section. defined in lin
 extern uint32_t _ebss;     // end__ address for the .bss section. defined in linker script
 extern uint32_t _estack;   // end of the RAM, 
 
-void system_info_linker(void)
+void system_info_mem(void)
 {
     void *beg, *end;
     uint32_t size;
     
-    printf("Memory Section Info ......\r\n");
+    // FLASH
+    printf("FLASH Info\r\n");
 
     beg = (void *) &g_pfnVectors;
     end = (void *) &_stext - sizeof(uint32_t);
     size = ((uint32_t) end - (uint32_t) beg) + sizeof(uint32_t);
-    printf("  vector: 0x%08lx, 0x%08lx (%lu)\r\n", (uint32_t) beg, (uint32_t) end, size);
+    printf("  vector: 0x%08lx - 0x%08lx  %7lu\r\n", (uint32_t) beg, (uint32_t) end, size);
 
     beg = (void *) &_stext;
     end = (void *) &_etext;
     size = ((uint32_t) end - (uint32_t) beg) + sizeof(uint32_t);
-    printf("  text  : 0x%08lx, 0x%08lx (%lu)\r\n", (uint32_t) beg, (uint32_t) end, size);
+    printf("  text  : 0x%08lx - 0x%08lx  %7lu\r\n", (uint32_t) beg, (uint32_t) end, size);
 
     beg = (void *) &_srodata;
     end = (void *) &_erodata;
     size = ((uint32_t) end - (uint32_t) beg) + sizeof(uint32_t);
-    printf("  rodata: 0x%08lx, 0x%08lx (%lu)\r\n", (uint32_t) beg, (uint32_t) end, size);
+    printf("  rodata: 0x%08lx - 0x%08lx  %7lu\r\n", (uint32_t) beg, (uint32_t) end, size);
+
+    // RAM
+    printf("RAM Info\r\n");
 
     beg = (void *) &_sdata;
     end = (void *) &_edata;
     size = ((uint32_t) end - (uint32_t) beg) + sizeof(uint32_t);
-    printf("  data  : 0x%08lx, 0x%08lx (%lu)\r\n", (uint32_t) beg, (uint32_t) end, size);
+    printf("  data  : 0x%08lx - 0x%08lx  %7lu\r\n", (uint32_t) beg, (uint32_t) end, size);
 
     beg = (void *) &_sbss;
     end = (void *) &_ebss;
     size = ((uint32_t) end - (uint32_t) beg);
-    printf("  bss   : 0x%08lx, 0x%08lx (%lu)\r\n", (uint32_t) beg, (uint32_t) end, size);
+    printf("  bss   : 0x%08lx - 0x%08lx  %7lu\r\n", (uint32_t) beg, (uint32_t) end, size);
 
-    printf("  estack: 0x%08lx\r\n", (uint32_t) &_estack);
+    beg = (void *) &_end;
+    end = (void *) __sbrk_heap_end;
+    size = ((uint32_t) end - (uint32_t) beg);
+    printf("  heap  : 0x%08lx - 0x%08lx  %7lu\r\n", (uint32_t) beg, (uint32_t) end, size);
+
+    beg = (void *) __sbrk_heap_end;
+    end = (void *) task_next_stack_start;
+    size = ((uint32_t) end - (uint32_t) beg);
+    printf("  free  : 0x%08lx - 0x%08lx  %7lu\r\n", (uint32_t) beg, (uint32_t) end, size);
+
+    beg = (void *) task_next_stack_start;
+    end = (void *) &_estack;
+    size = ((uint32_t) end - (uint32_t) beg);
+    printf("  stack : 0x%08lx - 0x%08lx  %7lu\r\n", (uint32_t) beg, (uint32_t) end, size);
 }
 
 
@@ -110,15 +128,6 @@ void system_nvic_priority_dump(void)
     printf("   Dbg Monitor: %lu\r\n", __NVIC_GetPriority(DebugMonitor_IRQn));
     printf("   PendSV     : %lu\r\n", __NVIC_GetPriority(PendSV_IRQn));
     printf("   SysTick    : %lu\r\n", __NVIC_GetPriority(SysTick_IRQn));
-}
-
-
-void system_info_summary(void)
-{
-    printf("CPU Hz: %lu\r\n", cpu_ticks_per_sec);
-    system_info_linker();
-    system_info_heap();
-    system_nvic_priority_dump();
 }
 
 

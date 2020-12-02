@@ -12,11 +12,6 @@
 #include "kernel/task.h"
 
 
-/* flag that control the checking/displaying task stack
- * usuage in montor/display task */
-extern uint32_t cli_task_root_stack_check_enable;
-
-
 uint64_t task_get_ticks(uint32_t task_id);
 uint32_t task_is_suspend(uint32_t task_id);
 void cli_task_init (void);

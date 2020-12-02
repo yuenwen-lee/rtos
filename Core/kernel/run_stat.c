@@ -59,7 +59,7 @@ uint32_t run_time_get_task (uint32_t t_now)
 }
 
 
-void run_time_stack_push_isr (int interrupt_disable)
+volatile void run_time_stack_push_isr (int interrupt_disable)
 {
     uint32_t t_now;
     uint32_t wr_indx;
@@ -90,7 +90,7 @@ void run_time_stack_push_isr (int interrupt_disable)
 }
 
 
-uint32_t run_time_stack_pop_isr (int interrupt_disable)
+volatile uint32_t run_time_stack_pop_isr (int interrupt_disable)
 {
     uint32_t t_accum = 0;
     uint32_t indx;
@@ -132,7 +132,7 @@ uint32_t run_time_stack_pop_isr (int interrupt_disable)
 }
 
 
-void run_time_sche_start (void)
+volatile void run_time_sche_start (void)
 {
     uint32_t t_now;
 
@@ -149,7 +149,7 @@ void run_time_sche_start (void)
 }
 
 
-void run_time_sche_end (run_stat_t *task_stat, run_stat_t *sche_stat)
+volatile void run_time_sche_end (run_stat_t *task_stat, run_stat_t *sche_stat)
 {
     if (run_time_stack_wr_indx != 1) {
         // Should never happen, PendSV is the lowest IRQ ...
@@ -471,7 +471,7 @@ static cli_info_t cli_run_stat_root_load;
 
 void cli_run_stat_init(void)
 {
-    cli_info_init_node(&cli_run_stat_root, "run_stat", "show system info");
+    cli_info_init_node(&cli_run_stat_root, "sys", "show system info");
     cli_info_attach_root(&cli_run_stat_root);
 
     cli_info_init_leaf(&cli_run_stat_root_load, "load", "show system load",

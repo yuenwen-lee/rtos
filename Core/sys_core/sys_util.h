@@ -45,9 +45,8 @@ static inline void cpu_irq_leave_critical(void)
 // ###########################################################################
 void system_heap_update(uint8_t *heap_end);
 void system_info_heap(void);
-void system_info_linker(void);
+void system_info_mem(void);
 void system_nvic_priority_dump(void);
-void system_info_summary(void);
 
 // ###########################################################################
 // Testing/Verification API

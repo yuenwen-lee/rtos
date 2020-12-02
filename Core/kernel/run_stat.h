@@ -50,11 +50,11 @@ extern uint32_t cli_run_stat_root_load_display_enable;
 void run_time_set_task(uint32_t t_now);
 uint32_t run_time_get_task(uint32_t t_now);
 
-void run_time_sche_start(void);
-void run_time_sche_end(run_stat_t *task_stat, run_stat_t *sche_stat);
+volatile void run_time_sche_start(void);
+volatile void run_time_sche_end(run_stat_t *task_stat, run_stat_t *sche_stat);
 
-void run_time_stack_push_isr(int interrupt_disable);
-uint32_t run_time_stack_pop_isr(int interrupt_disable);
+volatile void run_time_stack_push_isr(int interrupt_disable);
+volatile uint32_t run_time_stack_pop_isr(int interrupt_disable);
 
 void run_stat_register_task(const char *name, uint32_t task_id, run_stat_t *stat);
 void run_stat_register_isr(const char *name, uint32_t isr_id, run_stat_t *stat, run_stat_que_t *stat_q);

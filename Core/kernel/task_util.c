@@ -123,7 +123,7 @@ static int cli_cb_task_root_list(cmd_info_t *cmd_info)
     uint32_t n;
 
     printf("Id   Name          Pri  State      Rdy_Count\r\n");
-    printf("--   ------------  ---  ---------  ---------\r\n");
+    printf("--   ------------  ---  ---------  ----------\r\n");
     for (n = 0; n < TASK_NUMB; ++n) {
         info_p = &task_info_pool[n];
         if (info_p->state == TASK_STATE_UNUSED) {
@@ -140,14 +140,46 @@ static int cli_cb_task_root_list(cmd_info_t *cmd_info)
 }
 
 
-/* flag that control the checking/displaying task stack
- * usuage in montor/display task */
-uint32_t cli_task_root_stack_check_enable;
+static void cli_cb_task_root_stack_check(void)
+{
+    task_info_t *task_info;
+    uint32_t n;
+
+    for (n = 0; n < task_numb_total; ++n) {
+        task_info = &task_info_pool[n];
+        task_info->stack_usage = task_stack_check_usage(task_info);
+    }
+}
+
+
+static void cli_cb_task_root_stack_display(void)
+{
+    task_info_t *info_p;
+    char name_buf[13];
+    uint32_t n;
+
+    printf("Id   Name          Size   Max   Now\r\n");
+    printf("--   ------------  ----  ----  ----\r\n");
+    for (n = 0; n < TASK_NUMB; ++n) {
+        info_p = &task_info_pool[n];
+        if (info_p->state == TASK_STATE_UNUSED) {
+            continue;
+        }
+        printf("%2d - %s  %4u  %4u  %4lu\r\n", info_p->id,
+               string_fill_buf(name_buf, sizeof(name_buf), info_p->name),
+               info_p->stack_size, info_p->stack_usage,
+               info_p->stack_base - (uint32_t) info_p->sp);
+    }
+    printf("\r\n");
+}
 
 
 static int cli_cb_task_root_stack(cmd_info_t *cmd_info)
 {
-    cli_task_root_stack_check_enable = 1;
+    cli_cb_task_root_stack_check();
+    cli_cb_task_root_stack_display();
+
+//  cli_task_root_stack_check_enable = 1;
     return 0;
 }
 

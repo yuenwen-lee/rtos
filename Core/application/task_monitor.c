@@ -24,8 +24,6 @@
 
 
 static void monitor_display_ctx_stat(void);
-static void monitor_task_stack_usage(void);
-static void monitor_display_task_stack(void);
 
 
 #if BENCHMARK_MONIT
@@ -57,13 +55,10 @@ void monitor_task(void *arg)
 #if BENCHMARK_MONIT
         t_samp = sys_timer_get_inline();
 #endif // BENCHMARK_SCHED
-        board_toggle_led_monitor();
-        task_timer_stat_update();
 
+        board_toggle_led_monitor();
         run_stat_update();
-        if (cli_task_root_stack_check_enable) {
-            monitor_task_stack_usage();
-        }
+//      task_timer_stat_update();   // Task EXAMPLE ........
 
         if (run_stat_que_mon_disp->time_dlt == 0) {
             task_set_priority(task_id_mon_disp, (PRIORITY_HIGHEST - 1));
@@ -100,14 +95,10 @@ void monitor_display_task(void *arg)
             putchar('J');
             monitor_display_ctx_stat();
             run_stat_display();
-//          task_timer_stat_display();
-//          task_mutex_stat_display();
+//          task_timer_stat_display();   // Task EXAMPLE ........
+//          task_mutex_stat_display();   // Task EXAMPLE ........
         }
 
-        if (cli_task_root_stack_check_enable) {
-            monitor_display_task_stack();
-            cli_task_root_stack_check_enable = 0;
-        }
         task_set_priority_self(my_priority);
     }
 }
@@ -120,35 +111,3 @@ static void monitor_display_ctx_stat(void)
     printf("tsk_ctx: %ld\r\n", task_ctx_counter);
     putchar('\n');
 }
-
-
-static void monitor_task_stack_usage(void)
-{
-    task_info_t *task_info;
-    uint32_t n;
-
-    for (n = 0; n < task_numb_total; ++n) {
-        task_info = &task_info_pool[n];
-        task_info->stack_usage = task_stack_check_usage(task_info);
-    }
-}
-
-
-static void monitor_display_task_stack(void)
-{
-    task_info_t *info_p;
-    char name_buf[13];
-    uint32_t n;
-
-    for (n = 0; n < TASK_NUMB; ++n) {
-        info_p = &task_info_pool[n];
-        if (info_p->state == TASK_STATE_UNUSED) {
-            continue;
-        }
-        printf("%2d - %s  %4u  %4u\r\n", info_p->id,
-               string_fill_buf(name_buf, sizeof(name_buf), info_p->name),
-               info_p->stack_usage, info_p->stack_size);
-    }   
-    printf("\r\n");
-}
-

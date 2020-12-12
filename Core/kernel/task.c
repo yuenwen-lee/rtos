@@ -643,9 +643,6 @@ void task_info_dump (task_info_t *task_p, int event)
     }
 
     printf("Task Info\r\n");
-    printf("  <self>    : %p\r\n", task_p);
-    printf("  que_prev  : %p\r\n", task_p->que_task_info.prev);
-    printf("  que_next  : %p\r\n", task_p->que_task_info.next);
     printf("  id        : %d\r\n", task_p->id);
     printf("  name      : %s\r\n", task_p->name);
     printf("  priority  : %d\r\n", task_p->priority);
@@ -658,6 +655,10 @@ void task_info_dump (task_info_t *task_p, int event)
     printf("  run_t_redy: %llu\r\n", task_p->run_stat.time_ready);
     printf("  run_t_ttl : %llu\r\n", task_p->run_stat.time_ttl);
     printf("  run_count : %lu\r\n", task_p->run_stat.run_counter);
+    printf("  <self>    : %p\r\n", task_p);
+    printf("    que_prev: %p\r\n", task_p->que_task_info.prev);
+    printf("    que_next: %p\r\n", task_p->que_task_info.next);
+    printf("\n");
 }
 
 

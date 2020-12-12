@@ -165,3 +165,61 @@ void sleep_que_dump(void)
         task_info = task_info->next;
     }
 }
+
+
+#define CPU_TICKS_SLEEP_SHIFT  31
+#define CPU_TICKS_SLEEP_STEP   (1 << CPU_TICKS_SLEEP_SHIFT)
+#define CPU_TICKS_SLEEP_MASK   (((uint32_t) -1) >> (32 - CPU_TICKS_SLEEP_SHIFT))
+
+
+typedef struct sleep_info_s {
+    uint32_t     wake_up_time;
+    uint32_t     ext_time;
+    uint32_t     ext_count;
+} sleep_info_t;
+
+
+uint32_t sleep_info_update(sleep_info_t *s_info_p)
+{
+    if (s_info_p->ext_count > 0) {
+        s_info_p->wake_up_time += CPU_TICKS_SLEEP_STEP;
+        s_info_p->ext_count--;
+        return 1;
+
+    } else if (s_info_p->ext_time > 0) {
+        s_info_p->wake_up_time += s_info_p->ext_time;
+        s_info_p->ext_time = 0;
+        return 1;
+
+    } else {
+        return 0;
+    }
+}
+
+
+void sleep_msec_NEW(sleep_info_t *sleep_info_p, uint32_t msec)
+{
+    uint64_t      ticks_dlt;
+    uint32_t      ticks_now;
+    uint32_t      quot, remn;
+
+    ticks_now = sys_timer_get_inline();
+
+    ticks_dlt = msec_to_cpu_tick_NEW(msec);
+    quot = (uint32_t) (ticks_dlt >> CPU_TICKS_SLEEP_SHIFT);
+    remn = (uint32_t) (ticks_dlt &  CPU_TICKS_SLEEP_MASK);
+
+    sleep_info_p->wake_up_time = ticks_now;
+    if (quot > 0) {
+        sleep_info_p->wake_up_time += CPU_TICKS_SLEEP_STEP;
+        sleep_info_p->ext_time = remn;
+        sleep_info_p->ext_count = quot - 1;
+
+    } else {
+        sleep_info_p->wake_up_time += remn;
+        sleep_info_p->ext_time = 0;
+        sleep_info_p->ext_count = 0;
+    }
+
+    sleep_core(sleep_info_p->wake_up_time);
+}

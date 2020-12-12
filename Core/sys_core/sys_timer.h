@@ -35,6 +35,16 @@ static inline uint32_t msec_to_cpu_tick(uint32_t msec)
     return (msec * cpu_ticks_per_msec);
 }
 
+static inline uint32_t usec_to_cpu_tick_NEW(uint32_t usec)
+{
+    return ((uint64_t) usec * (uint64_t) cpu_ticks_per_usec);
+}
+
+static inline uint64_t msec_to_cpu_tick_NEW(uint32_t msec)
+{
+    return ((uint64_t) msec * (uint64_t) cpu_ticks_per_msec);
+}
+
 static inline uint32_t sys_timer_get_inline(void)
 {
     return (volatile uint32_t) sys_timer_hndl.Instance->CNT;

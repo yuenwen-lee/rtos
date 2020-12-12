@@ -44,7 +44,7 @@ uint32_t task_timer_sinf(void *arg);
 uint32_t task_timer_tanf(void *arg);
 void task_timer_stat_update(void);
 void task_timer_stat_display(void);
-
+uint32_t task_timer_hello(void);
 
 //
 // task_example_mutex.c  .........................................

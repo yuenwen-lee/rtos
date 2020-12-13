@@ -13,14 +13,12 @@
 #include "kernel/sleep.h"
 
 
-uint32_t  sys_tick_per_sec;
-uint32_t  sys_tick_period;
+volatile uint32_t  sys_ticks;
+uint32_t  sys_ticks_per_sec;
+uint32_t  sys_tick_period;     // in CPU cycles
+
 uint32_t  sys_slot_ratio;
-
 uint32_t  sys_slot_counter;
-
-volatile uint64_t  sys_clock;
-volatile uint32_t  sys_tick_counter;
 
 run_stat_que_t run_stat_que_sys_tick;
 run_stat_t run_stat_sys_tick;
@@ -57,14 +55,14 @@ void sysTickHandlerCnfg(uint32_t usec, uint32_t ratio)
     if (cpu_ticks_per_sec == 0) {
         sys_timer_cpu_ticks_update();
     }
-    sys_tick_per_sec = 1000000 / usec;
+    sys_ticks_per_sec = 1000000 / usec;
     sys_slot_ratio = ratio;
 
     run_stat_register_isr("sys_tick", 0, &run_stat_sys_tick, &run_stat_que_sys_tick);
 
     // Configure SysTick to periodically interrupt.
     if (sysTickConfig(usec * cpu_ticks_per_usec, 0) == false) {
-            printf("SysTick config failed .....\r\n");
+        printf("SysTick config failed .....\r\n");
         while (1) ;
     }
     sys_tick_period = sysTickGetPeriod();
@@ -83,8 +81,7 @@ void SysTick_Handler()
 
     t_now = sys_timer_get_inline();
 
-    sys_clock += sys_tick_period;
-    sys_tick_counter++;
+    sys_ticks++;
 
     sys_slot_counter++;
     if (sys_slot_counter == sys_slot_ratio) {
@@ -165,7 +162,7 @@ void sysTickTest(void)
     delay = 10000;
     for (n = cnt = 0; n < TEST_SAMPLE_COUNT; ++n) {
         sysTickTestDummyDelay(delay);
-        tick[n] = sys_tick_counter;
+        tick[n] = sys_ticks;
         curt[n] = SysTick->VAL;
     }
 

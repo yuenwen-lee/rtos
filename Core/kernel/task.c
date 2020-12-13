@@ -621,7 +621,7 @@ void task_switch(task_info_t *task_info_next_p)
     // swap the run task
     task_id_run     = task_info_next_p->id;
     task_info_run_p = task_info_next_p;
-    task_info_run_p->run_stat.time_ready = sys_clock_get_kernel();
+    task_info_run_p->run_stat.time_ready = sys_timer_get_inline();
     task_info_run_p->run_stat.run_counter++;
     task_ctx_counter++;
 
@@ -652,9 +652,9 @@ void task_info_dump (task_info_t *task_p, int event)
     printf("  stack_size: %d\r\n", task_p->stack_size);
     printf("  stack_ptr : %p\r\n", (void *) task_p->sp);
     printf("  exc_rtn_b4: %lu %s\r\n", task_p->exc_rtn_b4, float_stat);
-    printf("  run_t_redy: %llu\r\n", task_p->run_stat.time_ready);
-    printf("  run_t_ttl : %llu\r\n", task_p->run_stat.time_ttl);
+    printf("  run_t_redy: %lu\r\n", task_p->run_stat.time_ready);
     printf("  run_count : %lu\r\n", task_p->run_stat.run_counter);
+    printf("  run_t_ttl : %llu\r\n", task_p->run_stat.time_ttl);
     printf("  <self>    : %p\r\n", task_p);
     printf("    que_prev: %p\r\n", task_p->que_task_info.prev);
     printf("    que_next: %p\r\n", task_p->que_task_info.next);

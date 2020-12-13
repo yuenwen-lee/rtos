@@ -13,11 +13,9 @@
 #include "stm32f4xx/main.h"
 
 
-extern uint32_t sys_tick_per_sec;
-extern uint32_t sys_tick_period;
-
-extern volatile uint64_t sys_clock;
-extern volatile uint32_t sys_tick_counter;
+extern volatile uint32_t sys_ticks;
+extern uint32_t sys_ticks_per_sec;
+extern uint32_t sys_tick_period;     // in CPU cycles
 
 
 void sysTimeCalibrate(void);
@@ -32,31 +30,6 @@ uint64_t sys_clock_get(void);
 static inline uint32_t sysTickGetPeriod(void)
 {
     return (SysTick->LOAD + 1);
-}
-
-static inline uint32_t get_sys_tick_counter(void)
-{
-    return sys_tick_counter;
-}
-
-static inline uint64_t sys_clock_get_kernel(void)
-{
-    return sys_clock + (uint64_t) (sys_tick_period - SysTick->VAL);
-}
-
-static inline uint64_t sys_clock_get_inline(void)
-{
-    volatile uint32_t  sys_tick_cntr_samp;
-    volatile uint32_t  sys_tick_cur;
-    uint64_t  sys_clk;
-
-    do {
-        sys_tick_cntr_samp = sys_tick_counter;
-        sys_tick_cur = SysTick->VAL;
-    } while (sys_tick_counter != sys_tick_cntr_samp);
-
-    sys_clk = (uint64_t) sys_tick_cntr_samp * (uint64_t) sys_tick_period;
-    return sys_clk + (uint64_t) (sys_tick_period - sys_tick_cur);
 }
 
 

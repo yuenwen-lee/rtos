@@ -205,7 +205,7 @@ void sleep_msec_NEW(sleep_info_t *sleep_info_p, uint32_t msec)
 
     ticks_now = sys_timer_get_inline();
 
-    ticks_dlt = msec_to_cpu_tick_NEW(msec);
+    ticks_dlt = msec_to_cpu_tick_64(msec);
     quot = (uint32_t) (ticks_dlt >> CPU_TICKS_SLEEP_SHIFT);
     remn = (uint32_t) (ticks_dlt &  CPU_TICKS_SLEEP_MASK);
 

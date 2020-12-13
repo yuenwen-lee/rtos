@@ -10,6 +10,7 @@
 #include <stdio.h>
 
 #include "sys_core/sys_ticks.h"
+#include "sys_core/sys_timer.h"
 #include "kernel/task.h"
 #include "kernel/task_util.h"
 #include "kernel/timer.h"
@@ -138,13 +139,11 @@ uint32_t task_timer_tanf (void *arg)
 uint32_t task_timer_hello (void)
 {
     timer_obj_t  task_timer;
-    uint32_t     overdue = 0;
 
     timer_init(&task_timer, (2*60*1000));
-
     while (1) {
         timer_wait(&task_timer);
-        printf("Hello World !!! %llu (ov %lu)\r\n", sys_clock, overdue);
+        printf("Hello World !!! %llu\r\n", sys_timer_64_get_inline());
     }
 
     return 1;

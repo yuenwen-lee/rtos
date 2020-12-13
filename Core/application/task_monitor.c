@@ -10,6 +10,7 @@
 #include <string.h>
 
 #include "sys_core/sys_ticks.h"
+#include "sys_core/sys_timer.h"
 #include "kernel/task.h"
 #include "kernel/task_util.h"
 #include "kernel/timer.h"
@@ -106,8 +107,8 @@ void monitor_display_task(void *arg)
 
 static void monitor_display_ctx_stat(void)
 {
-    printf("sys_clk: %llu\r\n", sys_clock);
-    printf("sys_tck: %lu\r\n", sys_tick_counter);
+    printf("sys_tmr: %llu\r\n", sys_timer_64_get_inline());
+    printf("sys_tck: %lu\r\n", sys_ticks);
     printf("tsk_ctx: %ld\r\n", task_ctx_counter);
     putchar('\n');
 }

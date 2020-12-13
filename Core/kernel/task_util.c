@@ -103,8 +103,9 @@ static int cli_cb_task_root_show(cmd_info_t *cmd_info)
         if (id_end < 0 || id_end >= task_numb_total) {
             id_end = task_numb_total - 1;
         }
-        printf("%lu ~ %lu\r\n", id_beg, id_end);
+        printf("%lu ~ %lu\r\n\n", id_beg, id_end);
 
+        printf("Sys_Timer_32b: %lu\r\n", sys_timer_get_inline());
         for (n = id_beg; n <= id_end; ++n) {
             task_info_dump(&task_info_pool[n], 0);
         }

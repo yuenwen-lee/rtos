@@ -66,7 +66,7 @@ uint32_t timer_wait_fixed (timer_obj_t *timer_p)
 
 static void timer_period_setup(timer_obj_t *timer_p)
 {
-    uint64_t  ticks_dlt = msec_to_cpu_tick_NEW(timer_p->period_msec);
+    uint64_t  ticks_dlt = msec_to_cpu_tick_64(timer_p->period_msec);
     uint32_t  count = (uint32_t) (ticks_dlt >> CPU_TICKS_SLEEP_SHIFT);
     uint32_t  ticks = (uint32_t) (ticks_dlt &  CPU_TICKS_SLEEP_MASK);
 

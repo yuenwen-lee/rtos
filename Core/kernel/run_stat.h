@@ -21,9 +21,9 @@ typedef struct run_time_tag_s {
 } run_time_stack_t;
 
 typedef struct run_stat_s {
-    uint64_t  time_ready;      // last time when task state changes to "TASK_STATE_RUN"
-    uint64_t  time_ttl;        // total run time (CPU cycles)
     uint32_t  run_counter;     // task -> in TASK_STATE_RUN, ISR -> number called
+    uint32_t  time_ready;      // last time when task state changes to "TASK_STATE_RUN"
+    uint64_t  time_ttl;        // total run time (CPU cycles)
 } run_stat_t;
 
 typedef struct run_stat_que_s {

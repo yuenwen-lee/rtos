@@ -423,67 +423,25 @@ void task_set_priority(uint32_t task_id, uint32_t pri_new)
 
 /* ********************************************************* */
 /* ********************************************************* */
-#define BENCHMARK_PRI_CHAIN_OP  0    // control the scheduler benchmark
-
-#if BENCHMARK_PRI_CHAIN_OP
-uint32_t t_bench_insert_pri_chain_avrg = 0;             // 13
-uint32_t t_bench_insert_pri_chain_max = 0;              // 13
-uint32_t t_bench_insert_pri_chain_min = (uint32_t) -1;  // 13
-#endif // BENCHMARK_PRI_CHAIN_OP
-
 void task_insert_to_pri_chain(task_fifo_t *task_fifo_p)
 {
-#if BENCHMARK_PRI_CHAIN_OP
-    volatile uint32_t  t_samp, t_diff;
-
-    t_samp = sys_timer_get_inline();
-#endif // BENCHMARK_PRI_CHAIN_OP
     uint32_t   bit_loc;
 
     bit_loc = (task_fifo_p->priority) & 0x1F;   // priority % 32
     pri_act_map.act_b_map |= (1 << bit_loc);
     pri_act_map.act_pri_num++;
-
-#if BENCHMARK_PRI_CHAIN_OP
-    t_diff = sys_timer_get_inline() - t_samp;
-    if (t_diff > t_bench_insert_pri_chain_max)
-        t_bench_insert_pri_chain_max = t_diff;
-    if (t_diff < t_bench_insert_pri_chain_min)
-        t_bench_insert_pri_chain_min = t_diff;
-    t_bench_insert_pri_chain_avrg = (t_bench_insert_pri_chain_avrg * 31 + t_diff + 31) >> 5;
-#endif // BENCHMARK_PRI_CHAIN_OP
 }
 
 
 /* ********************************************************* */
 /* ********************************************************* */
-#if BENCHMARK_PRI_CHAIN_OP
-uint32_t t_bench_remove_pri_chain_avrg = 0;             // 13
-uint32_t t_bench_remove_pri_chain_max = 0;              // 13
-uint32_t t_bench_remove_pri_chain_min = (uint32_t) -1;  // 13
-#endif // BENCHMARK_PRI_CHAIN_OP
-
 void task_remove_from_pri_chain(task_fifo_t *task_fifo_p)
 {
-#if BENCHMARK_PRI_CHAIN_OP
-    volatile uint32_t  t_samp, t_diff;
-
-    t_samp = sys_timer_get_inline();
-#endif // BENCHMARK_PRI_CHAIN_OP
     uint32_t   bit_loc;
 
     bit_loc = task_fifo_p->priority & 0x1F;   // priority % 32
     pri_act_map.act_b_map &= ~(1 << bit_loc);
     pri_act_map.act_pri_num--;
-
-#if BENCHMARK_PRI_CHAIN_OP
-    t_diff = sys_timer_get_inline() - t_samp;
-    if (t_diff > t_bench_remove_pri_chain_max)
-        t_bench_remove_pri_chain_max = t_diff;
-    if (t_diff < t_bench_remove_pri_chain_min)
-        t_bench_remove_pri_chain_min = t_diff;
-    t_bench_remove_pri_chain_avrg = (t_bench_remove_pri_chain_avrg * 31 + t_diff + 31) >> 5;
-#endif // BENCHMARK_PRI_CHAIN_OP
 }
 
 
@@ -504,25 +462,10 @@ task_fifo_t *task_get_highest_from_pri_chain(void)
 
 /* ********************************************************* */
 /* ********************************************************* */
-#define BENCHMARK_TASK_CHAIN_OP  0    // control the scheduler benchmark
-
-#if BENCHMARK_TASK_CHAIN_OP
-uint32_t t_bench_enque_task_chain_avrg = 0;             // 57
-uint32_t t_bench_enque_task_chain_max = 0;              // 86
-uint32_t t_bench_enque_task_chain_min = (uint32_t) -1;  // 26
-#endif // BENCHMARK_TASK_CHAIN_OP
-
 task_fifo_t *task_enque_to_task_fifo(task_info_t *task_info_p)
 {
     task_fifo_t   *task_fifo_p;
     uint32_t       priority;
-#if BENCHMARK_TASK_CHAIN_OP
-    volatile uint32_t  t_samp, t_diff;
-#endif // BENCHMARK_TASK_CHAIN_OP
-
-#if BENCHMARK_TASK_CHAIN_OP
-    t_samp = sys_timer_get_inline();
-#endif // BENCHMARK_TASK_CHAIN_OP
 
     priority = task_info_p->priority;
     task_fifo_p = &task_fifo_pool[priority];
@@ -532,15 +475,6 @@ task_fifo_t *task_enque_to_task_fifo(task_info_t *task_info_p)
 
     if (task_fifo_p->task_numb == 1)
         task_insert_to_pri_chain(task_fifo_p);
-
-#if BENCHMARK_TASK_CHAIN_OP
-    t_diff = sys_timer_get_inline() - t_samp;
-    if (t_diff > t_bench_enque_task_chain_max)
-        t_bench_enque_task_chain_max = t_diff;
-    if (t_diff < t_bench_enque_task_chain_min)
-        t_bench_enque_task_chain_min = t_diff;
-    t_bench_enque_task_chain_avrg = (t_bench_enque_task_chain_avrg * 31 + t_diff + 31) >> 5;
-#endif // BENCHMARK_TASK_CHAIN_OP
 
     return task_fifo_p;
 }
@@ -562,37 +496,15 @@ void task_remove_from_task_fifo(task_info_t *task_info_p)
 
 /* ********************************************************* */
 /* ********************************************************* */
-#if BENCHMARK_TASK_CHAIN_OP
-uint32_t t_bench_deque_task_chain_avrg = 0;              // 58
-uint32_t t_bench_deque_task_chain_max = 0;               // 91
-uint32_t t_bench_deque_task_chain_min = (uint32_t) -1;   // 27
-#endif // BENCHMARK_TASK_CHAIN_OP
-
 task_info_t *task_deque_from_task_fifo(task_fifo_t *task_fifo_p)
 {
     que_t  *que_p;
-#if BENCHMARK_TASK_CHAIN_OP
-    volatile uint32_t  t_samp, t_diff;
-#endif // BENCHMARK_TASK_CHAIN_OP
-
-#if BENCHMARK_TASK_CHAIN_OP
-    t_samp = sys_timer_get_inline();
-#endif // BENCHMARK_TASK_CHAIN_OP
 
     task_fifo_p->task_numb--;
     que_p = que_deque(&task_fifo_p->que_head_task_info);
 
     if (task_fifo_p->task_numb == 0)
         task_remove_from_pri_chain(task_fifo_p);
-
-#if BENCHMARK_TASK_CHAIN_OP
-    t_diff = sys_timer_get_inline() - t_samp;
-    if (t_diff > t_bench_deque_task_chain_max)
-        t_bench_deque_task_chain_max = t_diff;
-    if (t_diff < t_bench_deque_task_chain_min)
-        t_bench_deque_task_chain_min = t_diff;
-    t_bench_deque_task_chain_avrg = (t_bench_deque_task_chain_avrg * 31 + t_diff + 31) >> 5;
-#endif // BENCHMARK_TASK_CHAIN_OP
 
     return (task_info_t *) que_p;
 }

@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "sys_core/sys_ticks.h"
+#include "sys_core/sys_timer.h"
 #include "kernel/task.h"
 #include "kernel/task_util.h"
 #include "application/cmd_util.h"

@@ -104,7 +104,7 @@ int main(void)
     task_create(task_mutex, "Mutex_2", PRIORITY_LOWEST + 5, TASK_STACK_SIZE_0_5K, &mutex_exmp);
     task_create(task_mutex, "Mutex_3", PRIORITY_LOWEST + 5, TASK_STACK_SIZE_0_5K, &mutex_exmp);
 
-    task_create(task_timer_hello, "Hello!!", PRIORITY_LOWEST + 6, TASK_STACK_SIZE_0_5K, NULL);
+    task_create(task_timer_hello, "Hello!!", PRIORITY_LOWEST + 6, TASK_STACK_SIZE_1_5K, NULL);
 
     // ############################################
     // ##  Start SysTick, scheduler will run ......

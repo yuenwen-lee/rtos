@@ -16,17 +16,10 @@
 
 
 #define SCHED_STACK_CHECK  0    // control the scheduler benchmark
-#define BENCHMARK_SCHED    0    // control the scheduler benchmark
 
 
 run_stat_que_t run_stat_que_sched;
 run_stat_t run_stat_sched;
-
-#if BENCHMARK_SCHED
-uint32_t t_bench_schd_avrg = 0;              // 518
-uint32_t t_bench_schd_max = 0;               // 644
-uint32_t t_bench_schd_min = (uint32_t) -1;   // 237
-#endif // BENCHMARK_SCHED
 
 
 uint32_t scheduler_core(uint32_t exc_turn)
@@ -38,13 +31,6 @@ uint32_t scheduler_core(uint32_t exc_turn)
     task_info_t  *task_info_p;
     uint32_t ctx_flag = 0;
     
-#if BENCHMARK_SCHED
-    volatile uint32_t  t_samp, t_diff;
-#endif // BENCHMARK_SCHED
-
-#if BENCHMARK_SCHED
-    t_samp = sys_timer_get_inline();
-#endif // BENCHMARK_SCHED
     run_time_sche_start();
 
 #if SCHED_STACK_CHECK
@@ -90,15 +76,6 @@ SCHEDULER_EXIT:
     }
     run_stat_sched.run_counter++;
     run_time_sche_end(&task_info_p->run_stat, &run_stat_sched);
-
-#if BENCHMARK_SCHED
-    t_diff = sys_timer_get_inline() - t_samp;
-    if (t_diff > t_bench_schd_max)
-        t_bench_schd_max = t_diff;
-    if (t_diff < t_bench_schd_min)
-        t_bench_schd_min = t_diff;
-    t_bench_schd_avrg = (t_bench_schd_avrg * 31 + t_diff + 31) >> 5;
-#endif // BENCHMARK_SCHED
 
     return ctx_flag;
 }

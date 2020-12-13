@@ -21,17 +21,9 @@
 #include "sys_device/dev_uart.h"
 #include "examples/task_example.h"
 
-#define BENCHMARK_MONIT    0    // control the monitor benchmark
-
 
 static void monitor_display_ctx_stat(void);
 
-
-#if BENCHMARK_MONIT
-static uint32_t t_bench_mon_avrg = 0;              // ....  9 tasks + 3 ISR
-static uint32_t t_bench_mon_max = 0;               // 2323
-static uint32_t t_bench_mon_min = (uint32_t) -1;   // 2314
-#endif // BENCHMARK_MONIT
 
 uint32_t task_id_monitor;
 uint32_t task_id_monitor_display;
@@ -40,9 +32,6 @@ uint32_t task_id_monitor_display;
 void monitor_task(void *arg)
 {
     timer_obj_t  timer_mon;
-#if BENCHMARK_MONIT
-    volatile uint32_t  t_samp, t_diff;
-#endif // BENCHMARK_MONIT
     uint32_t task_id_mon_disp;
     run_stat_que_t *run_stat_que_mon_disp;
 
@@ -53,10 +42,6 @@ void monitor_task(void *arg)
     while (1) {
         timer_wait(&timer_mon);
 
-#if BENCHMARK_MONIT
-        t_samp = sys_timer_get_inline();
-#endif // BENCHMARK_SCHED
-
         board_toggle_led_monitor();
         run_stat_update();
 //      task_timer_stat_update();   // Task EXAMPLE ........
@@ -66,15 +51,6 @@ void monitor_task(void *arg)
         } else {
             task_resume(task_id_mon_disp);
         }
-
-#if BENCHMARK_MONIT
-        t_diff = sys_timer_get_inline() - t_samp;
-        if (t_diff > t_bench_mon_max)
-            t_bench_mon_max = t_diff;
-        if (t_diff < t_bench_mon_min)
-            t_bench_mon_min = t_diff;
-        t_bench_mon_avrg = (t_bench_mon_avrg * 31 + t_diff + 31) >> 5;
-#endif // BENCHMARK_MONIT
     }
 }
 

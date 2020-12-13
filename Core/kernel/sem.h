@@ -18,7 +18,6 @@ typedef struct sem_obj_ {
 void sem_init(sem_obj_t *sem_p);
 void sem_post(sem_obj_t *sem_p);
 void sem_wait(sem_obj_t *sem_p);
-void sem_bench_stat_collect(uint32_t val, uint32_t *max_p, uint32_t *min_p, uint32_t *avrg_p);
 
 
 #endif /* SEM_H_ */

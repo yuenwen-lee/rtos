@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "sys_core/sys_ticks.h"
 #include "sys_core/sys_timer.h"
 #include "sys_core/sys_util.h"
 #include "kernel/que.h"
@@ -181,7 +182,7 @@ void run_stat_init(void)
     que_init(&run_stat_que_isr);
     run_stat_reg_stck_ov();
 
-    cli_run_stat_init();
+    cli_sys_init();
 }
 
 
@@ -452,29 +453,60 @@ static void run_stat_failure (const char *msg)
 // ##
 // ############################################################################
 
-
 /* flag that control displaying task/isr cpu load in display task */
-uint32_t cli_run_stat_root_load_display_enable;
+uint32_t cli_sys_root_load_display_enable;
 
 
-static int cli_cb_run_stat_root_load(cmd_info_t *cmd_info)
+static int cli_cb_sys_root_load(cmd_info_t *cmd_info)
 {
-    cli_run_stat_root_load_display_enable = 1;
+    cli_sys_root_load_display_enable = 1;
     return 1;
 }
 
-/* ********************************************************* */
-/* ********************************************************* */
 
-static cli_info_t cli_run_stat_root;
-static cli_info_t cli_run_stat_root_load;
-
-void cli_run_stat_init(void)
+static int cli_cb_sys_root_halt(cmd_info_t *cmd_info)
 {
-    cli_info_init_node(&cli_run_stat_root, "sys", "show system info");
-    cli_info_attach_root(&cli_run_stat_root);
+    cpu_irq_enter_critical();    // __disable_irq();
+    sysTickStop();
+    sys_timer_halt();
+    cpu_irq_leave_critical();    // __enable_irq();
+    return 1;
+}
 
-    cli_info_init_leaf(&cli_run_stat_root_load, "load", "show system load",
-                       cli_cb_run_stat_root_load);
-    cli_info_attach_node(&cli_run_stat_root, &cli_run_stat_root_load);
+
+static int cli_cb_sys_root_resume(cmd_info_t *cmd_info)
+{
+    cpu_irq_enter_critical();    // __disable_irq();
+    sysTickStart();
+    sys_timer_resume();
+    cpu_irq_leave_critical();    // __enable_irq();
+    return 1;
+}
+
+
+/* ********************************************************* */
+/* ********************************************************* */
+
+static cli_info_t cli_sys_root;
+static cli_info_t cli_sys_root_load;
+static cli_info_t cli_sys_root_halt;
+static cli_info_t cli_sys_root_resume;
+
+
+void cli_sys_init(void)
+{
+    cli_info_init_node(&cli_sys_root, "sys", "system load and control");
+    cli_info_attach_root(&cli_sys_root);
+
+    cli_info_init_leaf(&cli_sys_root_load, "load", "show system load",
+                       cli_cb_sys_root_load);
+    cli_info_attach_node(&cli_sys_root, &cli_sys_root_load);
+
+    cli_info_init_leaf(&cli_sys_root_halt, "halt", "halt the system",
+                       cli_cb_sys_root_halt);
+    cli_info_attach_node(&cli_sys_root, &cli_sys_root_halt);
+
+    cli_info_init_leaf(&cli_sys_root_resume, "resume", "resume the system",
+                       cli_cb_sys_root_resume);
+    cli_info_attach_node(&cli_sys_root, &cli_sys_root_resume);
 }

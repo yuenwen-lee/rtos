@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 #include "sys_timer.h"
+#include "sys_device/dev_board.h"
 
 
 #define TIM2_PRIORITY     1    // range fron 0 (Highest) ~ 15 (Lowest)
@@ -17,7 +18,7 @@ uint32_t cpu_ticks_per_sec;
 uint32_t cpu_ticks_per_msec;
 uint32_t cpu_ticks_per_usec;
 
-volatile uint32_t sys_timer_high;
+volatile uint32_t sys_timer_high = 0xFFFFFFFF;
 
 
 void sys_timer_init(void)
@@ -68,26 +69,24 @@ void TIM2_IRQHandler(void)
 
 void sys_timer_start(void)
 {
-    HAL_TIM_Base_Start(&sys_timer_hndl);
-
-    /* Enable the TIM Update interrupt */
-    __HAL_TIM_ENABLE_IT(&sys_timer_hndl, TIM_IT_UPDATE);
     // Enable TIM2_IRQn IRQ
     HAL_NVIC_ClearPendingIRQ(TIM2_IRQn);
     HAL_NVIC_SetPriority(TIM2_IRQn, TIM2_PRIORITY, 0);
     HAL_NVIC_EnableIRQ(TIM2_IRQn);
+    /* Enable the TIM Update interrupt */
+    __HAL_TIM_ENABLE_IT(&sys_timer_hndl, TIM_IT_UPDATE);
+    HAL_TIM_Base_Start(&sys_timer_hndl);
 }
 
 
 void sys_timer_stop(void)
 {
-    // Enable TIM2_IRQn IRQ
-    HAL_NVIC_ClearPendingIRQ(TIM2_IRQn);
-    HAL_NVIC_DisableIRQ(TIM2_IRQn);
+    HAL_TIM_Base_Stop(&sys_timer_hndl);
     /* Disable the TIM Update interrupt */
     __HAL_TIM_DISABLE_IT(&sys_timer_hndl, TIM_IT_UPDATE);
-
-    HAL_TIM_Base_Stop(&sys_timer_hndl);
+    // Disable TIM2_IRQn IRQ
+    HAL_NVIC_ClearPendingIRQ(TIM2_IRQn);
+    HAL_NVIC_DisableIRQ(TIM2_IRQn);
 }
 
 

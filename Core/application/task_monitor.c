@@ -64,7 +64,7 @@ void monitor_display_task(void *arg)
     while (1) {
         task_suspend();
 
-        if (cli_run_stat_root_load_display_enable) {
+        if (cli_sys_root_load_display_enable) {
 //          putchar(ASCII_FF);
             putchar('\033');
             putchar('[');

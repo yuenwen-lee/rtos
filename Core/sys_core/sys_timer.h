@@ -27,6 +27,16 @@ void sys_timer_stop(void);
 void sys_timer_cpu_ticks_update(void);
 
 
+static inline void sys_timer_resume(void)
+{
+    HAL_TIM_Base_Start(&sys_timer_hndl);
+}
+
+static inline void sys_timer_halt(void)
+{
+    HAL_TIM_Base_Stop(&sys_timer_hndl);
+}
+
 static inline uint32_t usec_to_cpu_tick(uint32_t usec)
 {
     return (usec * cpu_ticks_per_usec);

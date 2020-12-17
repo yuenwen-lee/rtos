@@ -44,7 +44,7 @@ extern uint32_t sys_cpu_load;
 extern que_t  run_stat_que_task;
 extern que_t  run_stat_que_isr;
 /* flag that control displaying task/isr cpu load in display task */
-extern uint32_t cli_run_stat_root_load_display_enable;
+extern uint32_t cli_sys_root_load_display_enable;
 
 
 void run_time_set_task(uint32_t t_now);
@@ -69,12 +69,12 @@ void run_stat_display(void);
 
 void run_stat_reg_stck_ov(void);
 
-void cli_run_stat_init(void);
+void cli_sys_init(void);
 
-static inline void cli_cb_run_stat_root_load_stop(void)
+static inline void cli_cb_sys_root_load_stop(void)
 {
     /* stop displaying task/isr cpu load in display task */
-    cli_run_stat_root_load_display_enable = 0;
+    cli_sys_root_load_display_enable = 0;
 }
 
 

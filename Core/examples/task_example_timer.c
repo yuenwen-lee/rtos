@@ -140,7 +140,7 @@ uint32_t task_timer_hello (void)
 {
     timer_obj_t  task_timer;
 
-    timer_init(&task_timer, (2*60*1000));
+    timer_init(&task_timer, (2*60*1000));     // 2 min
     while (1) {
         timer_wait(&task_timer);
         printf("Hello World !!! %llu\r\n", sys_timer_64_get_inline());
@@ -148,6 +148,21 @@ uint32_t task_timer_hello (void)
 
     return 1;
 }
+
+
+uint32_t task_timer_greeting (void)
+{
+    timer_obj_t  task_timer;
+
+    timer_init(&task_timer, (1*60*60*1000));   // 1 hour
+    while (1) {
+        timer_wait(&task_timer);
+        printf("Greeting !!! %llu\r\n", sys_timer_64_get_inline());
+    }
+
+    return 1;
+}
+
 
 void task_timer_stat_update (void)
 {

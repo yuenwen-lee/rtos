@@ -104,7 +104,8 @@ int main(void)
     task_create(task_mutex, "Mutex_2", PRIORITY_LOWEST + 5, TASK_STACK_SIZE_0_5K, &mutex_exmp);
     task_create(task_mutex, "Mutex_3", PRIORITY_LOWEST + 5, TASK_STACK_SIZE_0_5K, &mutex_exmp);
 
-    task_create(task_timer_hello, "Hello!!", PRIORITY_LOWEST + 6, TASK_STACK_SIZE_1_5K, NULL);
+    task_create(task_timer_hello,    "Hello!!",  PRIORITY_LOWEST + 6, TASK_STACK_SIZE_1_5K, NULL);
+    task_create(task_timer_greeting, "Greeting", PRIORITY_LOWEST + 7, TASK_STACK_SIZE_1_5K, NULL);
 
     // ############################################
     // ##  Start SysTick, scheduler will run ......
@@ -261,7 +262,7 @@ static void MX_GPIO_Init(void)
     HAL_GPIO_Init(USER_Btn_GPIO_Port, &GPIO_InitStruct);
 
     /*Configure GPIO pins : LD1_Pin LD3_Pin LD2_Pin */
-    GPIO_InitStruct.Pin = LD1_Pin|LD3_Pin|LD2_Pin;
+    GPIO_InitStruct.Pin = LD1_Pin | LD3_Pin | LD2_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

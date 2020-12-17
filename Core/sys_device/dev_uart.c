@@ -66,7 +66,7 @@ static void uart_handler_core(uint8_t c)
 
     } else if (c == ASCII_EXT) {
         // if press CTL-C
-        cli_cb_run_stat_root_load_stop();
+        cli_cb_sys_root_load_stop();
 
     } else {
         while (uart_write_inline(&stm_uart3, c));

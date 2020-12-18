@@ -11,6 +11,7 @@
 #include "kernel/run_stat.h"
 #include "kernel/sched.h"
 #include "kernel/sleep.h"
+#include "sys_device/dev_board.h"
 
 
 volatile uint32_t  sys_ticks;
@@ -45,10 +46,12 @@ void sysTickStart(void)
                      SysTick_CTRL_ENABLE_Msk);         /* Enable SysTick IRQ and SysTick Timer */
 }
 
+
 void sysTickStop(void)
 {
     SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk;
 }
+
 
 void sysTickHandlerCnfg(uint32_t usec, uint32_t ratio)
 {
@@ -69,8 +72,8 @@ void sysTickHandlerCnfg(uint32_t usec, uint32_t ratio)
 
     run_stat_reg_isr_sched();
     set_pendsv_irq_priority(15);
-//  sysTickStart();
 }
+
 
 void SysTick_Handler()
 {
@@ -116,6 +119,7 @@ void sysTickTestPush(void)
         timer_stamp_count++;
     }
 }
+
 
 void sysTimerTest(void)
 {

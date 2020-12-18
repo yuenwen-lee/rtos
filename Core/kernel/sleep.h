@@ -8,8 +8,12 @@
 #ifndef _SLEEP_H_
 #define _SLEEP_H_
 
-
 #include "kernel/que.h"
+
+
+#define CPU_TICKS_SLEEP_SHIFT  30
+#define CPU_TICKS_SLEEP_STEP   (1 << CPU_TICKS_SLEEP_SHIFT)
+#define CPU_TICKS_SLEEP_MASK   (((uint32_t) -1) >> (32 - CPU_TICKS_SLEEP_SHIFT))
 
 
 typedef struct sleep_que_ {
@@ -21,9 +25,9 @@ typedef struct sleep_que_ {
 
 void sleep_init(void);
 void sleep_core(uint32_t tick);
+void sleep_core_64(uint64_t wake_up_time_64);
 void sleep_msec(uint32_t msec);
 void delay_usec(uint32_t usec);
-void sleep_que_dump(void);
 
 uint32_t check_sleep_que(uint32_t time_now);
 
